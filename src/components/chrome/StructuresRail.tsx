@@ -2,9 +2,10 @@ import { ChevronRight, Search } from 'lucide-react'
 import { useState } from 'react'
 import { useAtlas } from '@/atlas/AtlasProvider'
 import { isM2MuscleId } from '@/atlas/muscleReveal'
+import { noteChromeInteract } from '@/atlas/pointerSession'
 import { SYSTEMS } from '@/atlas/systems'
 import { Input } from '@/components/ui/input'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import type { Structure } from '@/atlas/types'
 
@@ -55,10 +56,26 @@ export function MobileStructures() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent
           side="right"
+          showCloseButton={false}
+          data-atlas-chrome=""
+          overlayProps={{
+            onPointerDownCapture: noteChromeInteract,
+          }}
           className="border-l border-[#3AD1C7]/25 bg-[#0B0D10]/90 text-ink backdrop-blur-xl md:hidden"
+          onPointerDownCapture={noteChromeInteract}
         >
-          <SheetHeader>
+          <SheetHeader className="flex-row items-center justify-between gap-3 pr-4">
             <SheetTitle className="font-display text-ink">Structures</SheetTitle>
+            <SheetClose asChild>
+              <button
+                type="button"
+                data-atlas-chrome=""
+                onPointerDown={noteChromeInteract}
+                className="rounded-full border border-[#3AD1C7]/55 bg-[#3AD1C7]/18 px-3 py-1.5 text-[12px] tracking-[0.14em] text-[#3AD1C7] uppercase"
+              >
+                Close
+              </button>
+            </SheetClose>
           </SheetHeader>
           <div className="min-h-0 flex-1 px-2 pb-4">
             <RailBody />

@@ -36,6 +36,7 @@ function SheetOverlay({
   return (
     <SheetPrimitive.Overlay
       data-slot="sheet-overlay"
+      data-atlas-chrome=""
       className={cn(
         "fixed inset-0 z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
         className
@@ -50,14 +51,16 @@ function SheetContent({
   children,
   side = "right",
   showCloseButton = true,
+  overlayProps,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left"
   showCloseButton?: boolean
+  overlayProps?: React.ComponentProps<typeof SheetPrimitive.Overlay>
 }) {
   return (
     <SheetPortal>
-      <SheetOverlay />
+      <SheetOverlay {...overlayProps} />
       <SheetPrimitive.Content
         data-slot="sheet-content"
         data-side={side}

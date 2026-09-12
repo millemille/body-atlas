@@ -52,6 +52,7 @@ test('deltoid and cuff do not register on a back-facing ray', () => {
     mesh.position.set(-0.12, 1.37, 0)
     mesh.userData.atlasId = id
     mesh.userData.atlasSystem = 'muscle'
+    mesh.userData.source = 'interim'
     mesh.updateMatrixWorld()
     markPickable(mesh, true, true)
     const backHits: { distance: number }[] = []
@@ -68,6 +69,7 @@ test('oblique back ray still skips pecs and cuff when the camera is behind', () 
     const mesh = new Mesh(new SphereGeometry(0.1, 16, 12), new MeshBasicMaterial())
     mesh.position.set(id === 'pectoralis' ? 0 : -0.12, 1.34, id === 'pectoralis' ? 0.18 : 0)
     mesh.userData.atlasId = id
+    mesh.userData.source = 'interim'
     mesh.updateMatrixWorld()
     markPickable(mesh, true, true)
     const hits: { distance: number }[] = []
@@ -107,6 +109,7 @@ test('pectoralis does not register on a back-facing ray', () => {
   mesh.position.set(0, 1.3, 0.22)
   mesh.userData.atlasId = 'pectoralis'
   mesh.userData.atlasSystem = 'muscle'
+  mesh.userData.source = 'interim'
   mesh.updateMatrixWorld()
   markPickable(mesh, true, true)
   const hits: { distance: number }[] = []

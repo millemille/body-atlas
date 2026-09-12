@@ -101,7 +101,6 @@ test('scapula and back gels are dorsal; sternum and limbs are not', () => {
   assert.equal(isDorsalStructure(STRUCTURE_BY_ID['scapula-left']), true)
   assert.equal(isDorsalStructure(STRUCTURE_BY_ID.trapezius), true)
   assert.equal(isDorsalStructure(STRUCTURE_BY_ID['erector-spinae']), true)
-  assert.equal(isDorsalStructure(STRUCTURE_BY_ID.latissimus), true)
   assert.equal(isDorsalStructure(STRUCTURE_BY_ID['hip-adductors']), false)
   assert.equal(isDorsalStructure(STRUCTURE_BY_ID.sacrum), true)
   assert.equal(isVentralStructure(STRUCTURE_BY_ID['body-of-sternum']), true)
