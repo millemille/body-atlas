@@ -23,7 +23,7 @@ test('nerve / vessel stay glyph copy; muscles are no longer placeholders', () =>
   const muscle = STRUCTURES.find((s) => s.system === 'muscle')
   assert.ok(muscle)
   assert.doesNotMatch(muscle.blurb, /interim placeholder|See boneCopy/i)
-  assert.match(muscle.kind, /densify volume/i)
+  assert.match(muscle.kind, /mesh/i)
   const nerve = STRUCTURES.find((s) => s.system === 'nerve')
   assert.ok(nerve)
   assert.equal(BOILERPLATE_RE.test(nerve.function), false)

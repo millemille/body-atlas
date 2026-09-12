@@ -9,7 +9,7 @@ function cardFocus() {
 }
 
 const FOOTNOTE =
-  'Illustrative mockup only — not a scan, not a clinical map. Skeleton meshes: BodyParts3D (DBCLS) / Z-Anatomy, CC BY-SA (attribute + share-alike). Muscle volumes this pass are atlas densify gels, not segmented BodyParts3D. Nerve / vessel / other stay glyphs.'
+  'Illustrative mockup only — not a scan, not a clinical map. Skeleton and muscle meshes: BodyParts3D (DBCLS) / Z-Anatomy, CC BY-SA (attribute + share-alike). Nerve / vessel / other stay glyphs.'
 
 function fieldRows(part: Structure): { label: string; value: string }[] {
   const system = SYSTEMS.find((s) => s.id === part.system)?.label ?? part.system
@@ -39,7 +39,7 @@ export function SelectionCard({
   className?: string
   mobile?: boolean
 }) {
-  const { selected, viewMode } = useAtlas()
+  const { selected, viewMode, select } = useAtlas()
   if (!selected) return null
 
   return (
@@ -84,7 +84,7 @@ export function SelectionCard({
         <p className="mt-3 text-[13px] leading-relaxed text-ink/80">{selected.blurb}</p>
         <p className="mt-3 text-[10px] leading-relaxed text-muted-ink/75">{FOOTNOTE}</p>
       </div>
-      <footer className="relative z-30 mt-3" style={{ pointerEvents: 'auto' }}>
+      <footer className="relative z-30 mt-3 flex flex-wrap items-center gap-2" style={{ pointerEvents: 'auto' }}>
         <button
           type="button"
           data-atlas-focus="card"
@@ -109,6 +109,16 @@ export function SelectionCard({
           style={{ pointerEvents: 'auto', minWidth: 96, minHeight: 40 }}
         >
           Focus
+        </button>
+        <button
+          type="button"
+          data-atlas-close="card"
+          tabIndex={0}
+          onClick={() => select(null)}
+          className="rounded-lg border border-[#3AD1C7]/50 px-4 py-2 text-[13px] tracking-wide text-[#3AD1C7] hover:bg-[#3AD1C7]/10"
+          style={{ pointerEvents: 'auto', minWidth: 96, minHeight: 40 }}
+        >
+          Close
         </button>
       </footer>
     </article>

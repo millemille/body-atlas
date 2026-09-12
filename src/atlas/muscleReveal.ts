@@ -9,7 +9,6 @@ export const M1_WAVES = [
   ['biceps-left', 'biceps-right'],
   ['trapezius'],
   ['triceps-left', 'triceps-right'],
-  ['latissimus'],
   ['gluteus'],
   ['hamstrings'],
   ['gastrocnemius'],

@@ -35,7 +35,26 @@ type AtlasObject = Object3D & {
     atlasId?: string
     rim?: boolean
     skipPick?: boolean
+    source?: 'bodyparts3d' | 'interim'
   }
+}
+
+function hitSource(hit: Intersection): 'bodyparts3d' | 'interim' | undefined {
+  const u = atlasOf(hit)
+  if (u.source) return u.source
+  return u.atlasId ? getStructure(u.atlasId)?.source : undefined
+}
+
+function isInterimHit(hit: Intersection) {
+  return hitSource(hit) === 'interim'
+}
+
+function isInterimId(
+  id: string | undefined,
+  source?: 'bodyparts3d' | 'interim',
+) {
+  if (source) return source === 'interim'
+  return Boolean(id && getStructure(id)?.source === 'interim')
 }
 
 function atlasOf(hit: Intersection): AtlasObject['userData'] {
@@ -129,8 +148,10 @@ export function skipMuscleOnBackRay(
   cameraPos?: CameraPos,
   rayDir?: RayDir | null,
   hitPoint?: { z: number } | null,
+  source?: 'bodyparts3d' | 'interim',
 ) {
-  if (skipVentralMuscleHit(id, cameraPos, rayDir, hitPoint)) return true
+  if (!isInterimId(id, source)) return false
+  if (skipVentralMuscleHit(id, cameraPos, rayDir, hitPoint, source)) return true
   return skipShoulderGelOnBack(id, cameraPos, rayDir)
 }
 
@@ -140,8 +161,9 @@ export function skipVentralMuscleHit(
   cameraPos?: CameraPos,
   rayDir?: RayDir | null,
   hitPoint?: { z: number } | null,
+  source?: 'bodyparts3d' | 'interim',
 ) {
-  if (!id) return false
+  if (!id || !isInterimId(id, source)) return false
   const part = getStructure(id)
   if (!part || part.system !== 'muscle' || !isVentralStructure(part)) return false
   if (rayFromBack(rayDir)) return true
@@ -173,9 +195,9 @@ export function preferDorsalOnBackView(
   if (usable.length === 0) return usable
   const first = usable[0]
   const firstId = atlasOf(first).atlasId
-  if (skipMuscleOnBackRay(firstId, cameraPos, rayDir, first.point)) {
+  if (skipMuscleOnBackRay(firstId, cameraPos, rayDir, first.point, hitSource(first))) {
     const rest = usable.filter(
-      (h) => !skipMuscleOnBackRay(atlasOf(h).atlasId, cameraPos, rayDir, h.point),
+      (h) => !skipMuscleOnBackRay(atlasOf(h).atlasId, cameraPos, rayDir, h.point, hitSource(h)),
     )
     if (rest.length === 0) return []
     const dorsal = rest.find(isScapulaHit) ?? rest.find(preferDorsalTarget)
@@ -519,14 +541,15 @@ export function resolveAtlasHits(
     if (u.rim || u.skipPick) return false
     if (hot && u.atlasSystem && !hot.has(u.atlasSystem)) return false
     if (h.object && !isWorldVisible(h.object)) return false
-    if (skipMuscleOnBackRay(u.atlasId, cameraPos, rayDir, h.point)) return false
+    if (skipMuscleOnBackRay(u.atlasId, cameraPos, rayDir, h.point, u.source)) return false
     return true
   })
   if (usable.length === 0) return []
   if (usable.length === 1) return usable
+  if (!isInterimHit(usable[0])) return usable
 
   const first = usable[0]
-  if (systemOf(first) === 'muscle' && TRANSLUCENT_MUSCLE) {
+  if (systemOf(first) === 'muscle' && TRANSLUCENT_MUSCLE && isInterimHit(first)) {
     let bone = usable.find((h) => systemOf(h) === 'skeleton')
     if (
       bone &&
@@ -617,21 +640,23 @@ export function pickAtlasId(
   let picked: string | undefined
   for (const h of resolved) {
     const id = atlasOf(h).atlasId
-    if (cuffWinsOver(id, h.point, cameraPos, rayDir)) {
-      picked = 'rotator-cuff'
-      break
-    }
-    if (adductorWinsOver(id, h.point)) {
-      picked = 'hip-adductors'
-      break
-    }
-    if (pecWinsOver(id, h.point, cameraPos, rayDir, muscleHot)) {
-      picked = 'pectoralis'
-      break
-    }
-    if (scapulaWinsOver(id, h.point, cameraPos, rayDir)) {
-      picked = scapulaIdForPoint(h.point)
-      break
+    if (isInterimHit(h)) {
+      if (cuffWinsOver(id, h.point, cameraPos, rayDir)) {
+        picked = 'rotator-cuff'
+        break
+      }
+      if (adductorWinsOver(id, h.point)) {
+        picked = 'hip-adductors'
+        break
+      }
+      if (pecWinsOver(id, h.point, cameraPos, rayDir, muscleHot)) {
+        picked = 'pectoralis'
+        break
+      }
+      if (scapulaWinsOver(id, h.point, cameraPos, rayDir)) {
+        picked = scapulaIdForPoint(h.point)
+        break
+      }
     }
     if (id) {
       picked = id
@@ -652,13 +677,18 @@ export function pickAtlasIdOrSelf(
 ): string | undefined {
   const picked = pickAtlasId(hits, hotSystems, cameraPos, rayDir)
   if (picked) return picked
-  if (!selfId || skipMuscleOnBackRay(selfId, cameraPos, rayDir, hits[0]?.point)) return undefined
-  if (cuffWinsOver(selfId, hits[0]?.point, cameraPos, rayDir)) return 'rotator-cuff'
-  if (adductorWinsOver(selfId, hits[0]?.point)) return 'hip-adductors'
-  const muscleHot = !hotSystems || hotSystems.includes('muscle')
-  if (pecWinsOver(selfId, hits[0]?.point, cameraPos, rayDir, muscleHot)) return 'pectoralis'
-  if (scapulaWinsOver(selfId, hits[0]?.point, cameraPos, rayDir)) {
-    return scapulaIdForPoint(hits[0]?.point)
+  const selfSource = hits[0] ? hitSource(hits[0]) : undefined
+  if (!selfId || skipMuscleOnBackRay(selfId, cameraPos, rayDir, hits[0]?.point, selfSource)) {
+    return undefined
+  }
+  if (isInterimId(selfId, selfSource)) {
+    if (cuffWinsOver(selfId, hits[0]?.point, cameraPos, rayDir)) return 'rotator-cuff'
+    if (adductorWinsOver(selfId, hits[0]?.point)) return 'hip-adductors'
+    const muscleHot = !hotSystems || hotSystems.includes('muscle')
+    if (pecWinsOver(selfId, hits[0]?.point, cameraPos, rayDir, muscleHot)) return 'pectoralis'
+    if (scapulaWinsOver(selfId, hits[0]?.point, cameraPos, rayDir)) {
+      return scapulaIdForPoint(hits[0]?.point)
+    }
   }
   return selfId
 }

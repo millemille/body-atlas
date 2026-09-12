@@ -17,7 +17,6 @@ export const LIVE_MUSCLE_IDS = [
   'abdominal-wall',
   'quadriceps',
   'trapezius',
-  'latissimus',
   'gluteus',
   'gastrocnemius',
   'hamstrings',
@@ -165,7 +164,15 @@ export function muscleCopy(id: string): MuscleCopy | null {
 }
 
 export function applyMuscleCopy<
-  T extends { id: string; system: string; function: string; relation: string; blurb: string; kind: string },
+  T extends {
+    id: string
+    system: string
+    function: string
+    relation: string
+    blurb: string
+    kind: string
+    source?: 'bodyparts3d' | 'interim'
+  },
 >(part: T): T {
   if (part.system !== 'muscle') return part
   const next = muscleCopy(part.id)
@@ -175,6 +182,6 @@ export function applyMuscleCopy<
     function: next.function,
     relation: next.relation,
     blurb: next.blurb,
-    kind: next.kind ?? 'Muscle · densify volume',
+    kind: next.kind ?? (part.source === 'bodyparts3d' ? 'Muscle · mesh' : 'Muscle · densify volume'),
   }
 }

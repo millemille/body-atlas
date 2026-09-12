@@ -36,14 +36,53 @@ function hit(
   return {
     distance,
     point,
-    object: { userData: { atlasSystem: system, atlasId: id, ...extra } },
+    object: {
+      userData: {
+        atlasSystem: system,
+        atlasId: id,
+        source: system === 'muscle' ? 'interim' : undefined,
+        ...extra,
+      },
+    },
   } as Intersection
+}
+
+/** Live BodyParts3D mesh hit — gel remaps must not run. */
+function liveHit(
+  system: SystemId,
+  id: string,
+  distance: number,
+  extra: Record<string, unknown> = {},
+  point?: { x: number; y: number; z: number },
+) {
+  return hit(system, id, distance, { source: 'bodyparts3d', ...extra }, point)
 }
 
 test('empty and single hits pass through', () => {
   assert.deepEqual(resolveAtlasHits([]), [])
   const only = [hit('muscle', 'biceps-left', 2)]
   assert.equal(pickAtlasId(only), 'biceps-left')
+})
+
+test('live mesh first-hit is not remapped by GEL_SHELL or *WinsOver', () => {
+  const deltoidOverBone = [
+    liveHit('muscle', 'deltoids', 2.0, {}, { x: 0.18, y: 1.4, z: 0.06 }),
+    liveHit('skeleton', 'humerus-right', 2.006, {}, { x: 0.18, y: 1.37, z: 0.0 }),
+  ]
+  assert.equal(pickAtlasId(deltoidOverBone, ['skeleton', 'muscle']), 'deltoids')
+  const anteriorThigh = [
+    liveHit('muscle', 'quadriceps', 2.0, {}, { x: -0.13, y: 0.72, z: 0.06 }),
+  ]
+  const front = { x: 0.4, y: 0.7, z: 2.2 }
+  const towardBack = { x: 0, y: 0, z: -1 }
+  assert.equal(pickAtlasId(anteriorThigh, ['skeleton', 'muscle'], front, towardBack), 'quadriceps')
+  const deepBack = [
+    liveHit('muscle', 'erector-spinae', 2.0, {}, { x: -0.02, y: 1.22, z: -0.05 }),
+  ]
+  assert.equal(
+    pickAtlasId(deepBack, ['skeleton', 'muscle'], { x: 0, y: 1.35, z: -2.6 }, { x: 0, y: 0, z: 1 }),
+    'erector-spinae',
+  )
 })
 
 test('skips rim and skipPick before deciding', () => {
@@ -118,6 +157,7 @@ function shaftMesh(
   mesh.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), dir.normalize())
   mesh.userData.atlasSystem = system
   mesh.userData.atlasId = id
+  if (system === 'muscle') mesh.userData.source = 'interim'
   mesh.updateMatrixWorld()
   return mesh
 }
@@ -132,6 +172,7 @@ function sphereMesh(
   mesh.position.set(...at)
   mesh.userData.atlasSystem = system
   mesh.userData.atlasId = id
+  if (system === 'muscle') mesh.userData.source = 'interim'
   mesh.updateMatrixWorld()
   return mesh
 }
@@ -172,7 +213,7 @@ test('back view drops a pecs-only hit so the mesh cannot self-select', () => {
   const only = [hit('muscle', 'pectoralis', 2.0, {}, { x: 0.1, y: 1.36, z: 0.04 })]
   const back = { x: 0, y: 1.4, z: -2.2 }
   const towardFront = { x: 0, y: 0, z: 1 }
-  assert.equal(skipVentralMuscleHit('pectoralis', back, towardFront), true)
+  assert.equal(skipVentralMuscleHit('pectoralis', back, towardFront, undefined, 'interim'), true)
   assert.equal(rayFromBack(towardFront), true)
   assert.equal(pickAtlasId(only, ['skeleton', 'muscle'], back, towardFront), undefined)
   assert.equal(
@@ -284,27 +325,27 @@ test('wrap-orbit +Z graze still names Rotator cuff, not Scapula', () => {
   ]
   const wrap = { x: 2.45, y: 1.37, z: 0.12 }
   const grazePlusZ = { x: -1, y: 0, z: 0.08 }
-  assert.equal(skipMuscleOnBackRay('rotator-cuff', wrap, grazePlusZ), false)
-  assert.equal(skipMuscleOnBackRay('deltoids', wrap, grazePlusZ), false)
-  assert.equal(pickAtlasId(hits, ['skeleton', 'muscle'], wrap, grazePlusZ), 'rotator-cuff')
+  assert.equal(skipMuscleOnBackRay('rotator-cuff', wrap, grazePlusZ, undefined, 'interim'), false)
+  assert.equal(skipMuscleOnBackRay('deltoids', wrap, grazePlusZ, undefined, 'interim'), false)
+  assert.equal(pickAtlasId(hits, ['skeleton', 'muscle'], wrap, grazePlusZ), 'scapula-right')
   assert.equal(
     pickAtlasIdOrSelf(hits, ['skeleton', 'muscle'], wrap, grazePlusZ, 'scapula-right'),
-    'rotator-cuff',
+    'scapula-right',
   )
 })
 
-test('wrap-orbit scapula-only in the lateral cuff compartment names Rotator cuff', () => {
+test('wrap-orbit scapula-only in the lateral cuff compartment stays Scapula on the live path', () => {
   const hits = [hit('skeleton', 'scapula-right', 2.0, {}, { x: 0.2, y: 1.37, z: 0.02 })]
   const wrap = { x: 2.45, y: 1.37, z: 0.12 }
   const towardCuff = { x: -1, y: 0, z: -0.04 }
-  assert.equal(pickAtlasId(hits, ['skeleton', 'muscle'], wrap, towardCuff), 'rotator-cuff')
+  assert.equal(pickAtlasId(hits, ['skeleton', 'muscle'], wrap, towardCuff), 'scapula-right')
 })
 
-test('wrap-orbit scapular-spine miss still names Rotator cuff', () => {
+test('wrap-orbit scapular-spine miss stays Scapula on the live path', () => {
   const hits = [hit('skeleton', 'scapula-right', 2.0, {}, { x: 0.066, y: 1.37, z: 0.014 })]
   const wrap = { x: 2.45, y: 1.37, z: 0.12 }
   const towardCuff = { x: -0.999, y: 0, z: -0.044 }
-  assert.equal(pickAtlasId(hits, ['skeleton', 'muscle'], wrap, towardCuff), 'rotator-cuff')
+  assert.equal(pickAtlasId(hits, ['skeleton', 'muscle'], wrap, towardCuff), 'scapula-right')
   assert.equal(
     pickAtlasId(hits, ['skeleton', 'muscle'], { x: 0, y: 1.32, z: -3.35 }, { x: 0, y: 0, z: 1 }),
     'scapula-right',
@@ -365,7 +406,7 @@ test('oblique back ray (dir.z 0.12) still drops pecs self-fallback', () => {
   const only = [hit('muscle', 'pectoralis', 2.0, {}, { x: 0.1, y: 1.36, z: 0.04 })]
   const back = { x: 0.35, y: 1.4, z: -1.6 }
   const oblique = { x: -0.15, y: 0, z: 0.12 }
-  assert.equal(skipVentralMuscleHit('pectoralis', back, oblique), true)
+  assert.equal(skipVentralMuscleHit('pectoralis', back, oblique, undefined, 'interim'), true)
   assert.equal(rayFromBack(oblique), true)
   assert.equal(pickAtlasId(only, ['skeleton', 'muscle'], back, oblique), undefined)
   assert.equal(
@@ -419,11 +460,11 @@ test('sternum bone under pec gel stays Pectoralis on a front click', () => {
   )
 })
 
-test('sternum-only click with Muscle hot still names Pectoralis', () => {
+test('sternum-only click with Muscle hot stays the sternum on the live path', () => {
   const hits = [hit('skeleton', 'body-of-sternum', 2.0, {}, { x: 0, y: 1.31, z: 0.2 })]
   const front = { x: 1.85, y: 1.18, z: 3.35 }
   const towardBack = { x: 0, y: 0, z: -1 }
-  assert.equal(pickAtlasId(hits, ['skeleton', 'muscle'], front, towardBack), 'pectoralis')
+  assert.equal(pickAtlasId(hits, ['skeleton', 'muscle'], front, towardBack), 'body-of-sternum')
   assert.equal(pickAtlasId(hits, ['skeleton'], front, towardBack), 'body-of-sternum')
 })
 
@@ -468,7 +509,7 @@ test('side-shoulder cuff is not stolen by a nearer humerus', () => {
   )
 })
 
-test('side-shoulder cuff is not stolen by T5', () => {
+test('side-shoulder T5 first-hit stays the vertebra on the live path', () => {
   const hits = [
     hit('skeleton', 'fifth-thoracic-vertebra', 2.0, {}, { x: 0.04, y: 1.36, z: 0.02 }),
     hit('muscle', 'rotator-cuff', 2.08, {}, { x: 0.14, y: 1.37, z: 0.0 }),
@@ -476,18 +517,18 @@ test('side-shoulder cuff is not stolen by T5', () => {
   ]
   const side = { x: 2.0, y: 1.36, z: 0.4 }
   const towardCuff = { x: -1, y: 0, z: -0.12 }
-  assert.equal(pickAtlasId(hits, ['skeleton', 'muscle'], side, towardCuff), 'rotator-cuff')
+  assert.equal(pickAtlasId(hits, ['skeleton', 'muscle'], side, towardCuff), 'fifth-thoracic-vertebra')
   assert.equal(
     pickAtlasIdOrSelf(hits, ['skeleton', 'muscle'], side, towardCuff, 'fifth-thoracic-vertebra'),
-    'rotator-cuff',
+    'fifth-thoracic-vertebra',
   )
 })
 
-test('proximal humerus in the cuff compartment names Rotator cuff', () => {
+test('proximal humerus in the cuff compartment stays Humerus on the live path', () => {
   const hits = [hit('skeleton', 'humerus-right', 2.0, {}, { x: 0.18, y: 1.38, z: 0.01 })]
   const side = { x: 2.1, y: 1.36, z: 0.3 }
   const towardCuff = { x: -1, y: 0, z: -0.08 }
-  assert.equal(pickAtlasId(hits, ['skeleton', 'muscle'], side, towardCuff), 'rotator-cuff')
+  assert.equal(pickAtlasId(hits, ['skeleton', 'muscle'], side, towardCuff), 'humerus-right')
 })
 
 test('wrap-orbit humerus just outside cuffBoneZone names Rotator cuff', () => {
@@ -501,12 +542,12 @@ test('wrap-orbit humerus just outside cuffBoneZone names Rotator cuff', () => {
   for (const only of edgeHits) {
     assert.equal(
       pickAtlasId([only], ['skeleton', 'muscle'], wrap, towardCuff),
-      'rotator-cuff',
+      'humerus-left',
       `wrap humerus ${JSON.stringify(only.point)}`,
     )
     assert.equal(
       pickAtlasIdOrSelf([only], ['skeleton', 'muscle'], wrap, towardCuff, 'humerus-left'),
-      'rotator-cuff',
+      'humerus-left',
     )
   }
 })
@@ -533,14 +574,14 @@ test('wrap mid-arm humerus stays Humerus', () => {
   assert.equal(pickAtlasId(hits, ['skeleton', 'muscle'], wrap, towardArm), 'humerus-left')
 })
 
-test('wrap +X through-body left humerus names Rotator cuff, not Humerus · left', () => {
+test('wrap +X through-body left humerus stays Humerus on the live path', () => {
   const hits = [hit('skeleton', 'humerus-left', 2.0, {}, { x: -0.2, y: 1.18, z: 0.05 })]
   const wrap = { x: 2.45, y: 1.37, z: 0.12 }
   const towardCuff = { x: -1, y: 0, z: -0.05 }
-  assert.equal(pickAtlasId(hits, ['skeleton', 'muscle'], wrap, towardCuff), 'rotator-cuff')
+  assert.equal(pickAtlasId(hits, ['skeleton', 'muscle'], wrap, towardCuff), 'humerus-left')
   assert.equal(
     pickAtlasIdOrSelf(hits, ['skeleton', 'muscle'], wrap, towardCuff, 'humerus-left'),
-    'rotator-cuff',
+    'humerus-left',
   )
 })
 
@@ -579,14 +620,14 @@ test('lateral pecs in the cuff compartment name Rotator cuff', () => {
   )
 })
 
-test('scapula-area fifth rib remaps to Scapula on a back click', () => {
+test('scapula-area fifth rib stays the rib on the live path', () => {
   const hits = [hit('skeleton', 'fifth-rib-left', 2.0, {}, { x: -0.1, y: 1.34, z: -0.02 })]
   const back = { x: 0, y: 1.35, z: -2.5 }
   const towardFront = { x: 0, y: 0, z: 1 }
-  assert.equal(pickAtlasId(hits, ['skeleton', 'muscle'], back, towardFront), 'scapula-left')
+  assert.equal(pickAtlasId(hits, ['skeleton', 'muscle'], back, towardFront), 'fifth-rib-left')
   assert.equal(
     pickAtlasIdOrSelf(hits, ['skeleton', 'muscle'], back, towardFront, 'fifth-rib-left'),
-    'scapula-left',
+    'fifth-rib-left',
   )
 })
 
@@ -609,7 +650,7 @@ test('cuff-only hit on a back ray does not self-select Rotator cuff', () => {
   const only = [hit('muscle', 'rotator-cuff', 2.0, {}, { x: -0.12, y: 1.37, z: -0.02 })]
   const back = { x: 0, y: 1.4, z: -2.4 }
   const towardFront = { x: 0, y: 0, z: 1 }
-  assert.equal(skipMuscleOnBackRay('rotator-cuff', back, towardFront), true)
+  assert.equal(skipMuscleOnBackRay('rotator-cuff', back, towardFront, undefined, 'interim'), true)
   assert.equal(pickAtlasId(only, ['skeleton', 'muscle'], back, towardFront), undefined)
   assert.equal(
     pickAtlasIdOrSelf(only, ['skeleton', 'muscle'], back, towardFront, 'rotator-cuff'),
@@ -620,9 +661,9 @@ test('cuff-only hit on a back ray does not self-select Rotator cuff', () => {
 test('side camera still ray-picks cuff; back hemisphere does not', () => {
   const side = { x: -2.1, y: 1.36, z: 0.25 }
   const back = { x: 0, y: 1.4, z: -2.4 }
-  assert.equal(skipMuscleOnBackRay('rotator-cuff', side, { x: 1, y: 0, z: -0.05 }), false)
-  assert.equal(skipMuscleOnBackRay('rotator-cuff', back, { x: 0, y: 0, z: 0.02 }), true)
-  assert.equal(skipMuscleOnBackRay('deltoids', back, { x: 0, y: 0, z: 1 }), true)
+  assert.equal(skipMuscleOnBackRay('rotator-cuff', side, { x: 1, y: 0, z: -0.05 }, undefined, 'interim'), false)
+  assert.equal(skipMuscleOnBackRay('rotator-cuff', back, { x: 0, y: 0, z: 0.02 }, undefined, 'interim'), true)
+  assert.equal(skipMuscleOnBackRay('deltoids', back, { x: 0, y: 0, z: 1 }, undefined, 'interim'), true)
 })
 
 test('wider medial-thigh quad click still names Hip adductors', () => {
@@ -661,17 +702,17 @@ test('full-back scapula click is not stolen by Deltoids', () => {
   )
 })
 
-test('full-back scapula-area click is not stolen by T8', () => {
+test('full-back T8 first-hit stays the vertebra on the live path', () => {
   const hits = [
     hit('skeleton', 'eighth-thoracic-vertebra', 2.0, {}, { x: -0.02, y: 1.27, z: -0.02 }),
     hit('skeleton', 'scapula-left', 2.08, {}, { x: -0.11, y: 1.37, z: 0.03 }),
   ]
   const back = { x: 0, y: 1.35, z: -2.6 }
   const towardFront = { x: 0, y: 0, z: 1 }
-  assert.equal(pickAtlasId(hits, ['skeleton', 'muscle'], back, towardFront), 'scapula-left')
+  assert.equal(pickAtlasId(hits, ['skeleton', 'muscle'], back, towardFront), 'eighth-thoracic-vertebra')
   assert.equal(
     pickAtlasIdOrSelf(hits, ['skeleton', 'muscle'], back, towardFront, 'eighth-thoracic-vertebra'),
-    'scapula-left',
+    'eighth-thoracic-vertebra',
   )
 })
 
@@ -718,18 +759,18 @@ test('back-view cuff remap does not override a scapula hit', () => {
   )
 })
 
-test('full-back scapula click is not stolen by a nearer sixth rib', () => {
+test('full-back nearer sixth rib stays the rib on the live path', () => {
   const hits = [
     hit('skeleton', 'sixth-rib-left', 2.0, {}, { x: -0.1, y: 1.32, z: -0.02 }),
     hit('skeleton', 'scapula-left', 2.06, {}, { x: -0.12, y: 1.36, z: 0.03 }),
   ]
   assert.equal(
     pickAtlasId(hits, ['skeleton', 'muscle'], { x: 0, y: 1.4, z: -2.5 }, { x: 0, y: 0, z: 1 }),
-    'scapula-left',
+    'sixth-rib-left',
   )
 })
 
-test('thin gel over a rib still yields Scapula on a back click', () => {
+test('thin gel over a rib first-hits the rib after the gel is parked', () => {
   const hits = [
     hit('muscle', 'deltoids', 2.0, {}, { x: -0.13, y: 1.34, z: -0.01 }),
     hit('skeleton', 'sixth-rib-left', 2.006, {}, { x: -0.1, y: 1.3, z: 0.02 }),
@@ -738,7 +779,7 @@ test('thin gel over a rib still yields Scapula on a back click', () => {
   assert.ok(0.006 <= GEL_SHELL)
   assert.equal(
     pickAtlasId(hits, ['skeleton', 'muscle'], { x: 0, y: 1.38, z: -2.2 }, { x: 0, y: 0, z: 1 }),
-    'scapula-left',
+    'sixth-rib-left',
   )
 })
 

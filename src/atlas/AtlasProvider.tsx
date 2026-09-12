@@ -52,7 +52,7 @@ const AtlasContext = createContext<AtlasContextValue | null>(null)
 
 export function AtlasProvider({ children }: { children: ReactNode }) {
   const [hotSystems, setHotSystems] = useState<SystemId[]>(['skeleton'])
-  const [m2Coverage, setM2Coverage] = useState(false)
+  const [m2Coverage, setM2Coverage] = useState(true)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [viewMode, setViewMode] = useState<ViewMode>('default')

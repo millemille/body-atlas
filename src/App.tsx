@@ -73,12 +73,8 @@ function Shell() {
 
       <div
         data-atlas-dock
-        className="relative z-50 flex w-full shrink-0 flex-col items-center justify-center gap-2"
-        style={{
-          pointerEvents: 'auto',
-          minHeight: 120,
-          padding: '20px 16px 28px',
-        }}
+        className="relative z-50 flex w-full shrink-0 flex-col items-center justify-center gap-2 px-4 py-5 pb-7 min-h-[120px] max-md:landscape:min-h-[72px] max-md:landscape:gap-1 max-md:landscape:py-2 max-md:landscape:pb-3"
+        style={{ pointerEvents: 'auto' }}
       >
         <BottomToolbar />
         <GestureHint />

@@ -79,6 +79,7 @@ export function AtlasMesh({ children, centered = true, ...props }: MeshProps) {
     if (state) {
       root.userData.atlasId = state.id
       root.userData.atlasSystem = STRUCTURE_BY_ID[state.id]?.system
+      root.userData.source = STRUCTURE_BY_ID[state.id]?.source
     }
     markPickable(root, pickable, muscleGel)
     return () => setLeaf(false)
@@ -94,6 +95,7 @@ export function AtlasMesh({ children, centered = true, ...props }: MeshProps) {
         if (state) {
           node.userData.atlasId = state.id
           node.userData.atlasSystem = STRUCTURE_BY_ID[state.id]?.system
+          node.userData.source = STRUCTURE_BY_ID[state.id]?.source
         }
       }}
       raycast={pickable ? (muscleGel ? muscleRaycast : meshRaycast) : skipRaycast}
