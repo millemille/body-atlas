@@ -1,0 +1,23 @@
+BodyParts3D / Z-Anatomy segmented bone meshes
+
+Source models: BodyParts3D — The Database Center for Life Science (DBCLS)
+Organized / distributed in the Z-Anatomy lineage (GitHub + Zenodo)
+
+License: Creative Commons Attribution-ShareAlike (CC BY-SA)
+- BodyParts3D mesh files: CC BY-SA 2.1 Japan
+- Z-Anatomy compilation: CC BY-SA 4.0
+
+https://creativecommons.org/licenses/by-sa/4.0/
+https://creativecommons.org/licenses/by-sa/2.1/jp/
+https://dbarchive.biosciencedbc.jp/en/bodyparts3d/lic.html
+https://github.com/Z-Anatomy/Models-of-human-anatomy
+
+Required attribution:
+"BodyParts3D — The Database Center for Life Science — CC BY-SA"
+"Z-Anatomy — The libre 3D atlas of anatomy — CC BY-SA 4.0"
+
+Share-alike: this derived GLB (Y-up, meter-scale, per-bone nodes, atlas materials)
+must be offered under a compatible CC BY-SA license when redistributed.
+
+This project does not treat the kit as CC0. True CC0 anatomical kits are rare.
+No Zygote or other paid fused scans are included.

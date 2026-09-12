@@ -1,0 +1,319 @@
+{
+  "count": 20,
+  "groups": [
+    {
+      "id": "pectoralis",
+      "fmas": [
+        "FMA13375",
+        "FMA34690",
+        "FMA45874",
+        "FMA79979"
+      ],
+      "sourceNames": [
+        "right pectoralis minor",
+        "clavicular part of right pectoralis major",
+        "abdominal part of right pectoralis major",
+        "sternocostal part of right pectoralis major"
+      ],
+      "laterality": "bilateral",
+      "vertexCount": 29460
+    },
+    {
+      "id": "biceps-left",
+      "fmas": [
+        "FMA37684",
+        "FMA37686"
+      ],
+      "sourceNames": [
+        "short head of right biceps brachii",
+        "long head of right biceps brachii"
+      ],
+      "laterality": "mirror",
+      "vertexCount": 2792
+    },
+    {
+      "id": "biceps-right",
+      "fmas": [
+        "FMA37684",
+        "FMA37686"
+      ],
+      "sourceNames": [
+        "short head of right biceps brachii",
+        "long head of right biceps brachii"
+      ],
+      "laterality": "source",
+      "vertexCount": 2792
+    },
+    {
+      "id": "triceps-left",
+      "fmas": [
+        "FMA37695",
+        "FMA37697",
+        "FMA37699"
+      ],
+      "sourceNames": [
+        "medial head of right triceps brachii",
+        "lateral head of right triceps brachii",
+        "long head of right triceps brachii"
+      ],
+      "laterality": "mirror",
+      "vertexCount": 3403
+    },
+    {
+      "id": "triceps-right",
+      "fmas": [
+        "FMA37695",
+        "FMA37697",
+        "FMA37699"
+      ],
+      "sourceNames": [
+        "medial head of right triceps brachii",
+        "lateral head of right triceps brachii",
+        "long head of right triceps brachii"
+      ],
+      "laterality": "source",
+      "vertexCount": 3403
+    },
+    {
+      "id": "deltoids",
+      "fmas": [
+        "FMA34680",
+        "FMA34682",
+        "FMA34684"
+      ],
+      "sourceNames": [
+        "clavicular part of right deltoid",
+        "acromial part of right deltoid",
+        "spinal part of right deltoid"
+      ],
+      "laterality": "bilateral",
+      "vertexCount": 10346
+    },
+    {
+      "id": "trapezius",
+      "fmas": [
+        "FMA33581",
+        "FMA33584",
+        "FMA33586"
+      ],
+      "sourceNames": [
+        "ascending part of right trapezius",
+        "transverse part of right trapezius",
+        "descending part of right trapezius"
+      ],
+      "laterality": "bilateral",
+      "vertexCount": 32182
+    },
+    {
+      "id": "rotator-cuff",
+      "fmas": [
+        "FMA32544",
+        "FMA32547",
+        "FMA13414",
+        "FMA32553"
+      ],
+      "sourceNames": [
+        "right supraspinatus",
+        "right infraspinatus muscle",
+        "right subscapularis",
+        "right teres minor"
+      ],
+      "laterality": "bilateral",
+      "vertexCount": 9506
+    },
+    {
+      "id": "abdominal-wall",
+      "fmas": [
+        "FMA13336"
+      ],
+      "sourceNames": [
+        "right external oblique"
+      ],
+      "laterality": "bilateral",
+      "vertexCount": 127814
+    },
+    {
+      "id": "quadriceps",
+      "fmas": [
+        "FMA38928",
+        "FMA38930",
+        "FMA38932",
+        "FMA38934"
+      ],
+      "sourceNames": [
+        "right rectus femoris",
+        "right vastus lateralis",
+        "right vastus medialis",
+        "right vastus intermedius"
+      ],
+      "laterality": "bilateral",
+      "vertexCount": 25644
+    },
+    {
+      "id": "gluteus",
+      "fmas": [
+        "FMA22328",
+        "FMA22330",
+        "FMA22332"
+      ],
+      "sourceNames": [
+        "right gluteus maximus",
+        "right gluteus medius",
+        "right gluteus minimus"
+      ],
+      "laterality": "bilateral",
+      "vertexCount": 14862
+    },
+    {
+      "id": "hamstrings",
+      "fmas": [
+        "FMA22358",
+        "FMA22448",
+        "FMA45888",
+        "FMA45891"
+      ],
+      "sourceNames": [
+        "right semitendinosus",
+        "right semimembranosus",
+        "long head of right biceps femoris",
+        "short head of right biceps femoris"
+      ],
+      "laterality": "bilateral",
+      "vertexCount": 16896
+    },
+    {
+      "id": "hip-adductors",
+      "fmas": [
+        "FMA22452",
+        "FMA22456",
+        "FMA22459",
+        "FMA43883"
+      ],
+      "sourceNames": [
+        "right adductor brevis",
+        "right adductor longus",
+        "right adductor magnus",
+        "right gracilis"
+      ],
+      "laterality": "bilateral",
+      "vertexCount": 18546
+    },
+    {
+      "id": "iliopsoas",
+      "fmas": [
+        "FMA22322",
+        "FMA22342"
+      ],
+      "sourceNames": [
+        "right iliacus",
+        "right psoas major"
+      ],
+      "laterality": "bilateral",
+      "vertexCount": 12158
+    },
+    {
+      "id": "gastrocnemius",
+      "fmas": [
+        "FMA45957",
+        "FMA45960"
+      ],
+      "sourceNames": [
+        "medial head of right gastrocnemius",
+        "lateral head of right gastrocnemius"
+      ],
+      "laterality": "bilateral",
+      "vertexCount": 8022
+    },
+    {
+      "id": "soleus",
+      "fmas": [
+        "FMA22558"
+      ],
+      "sourceNames": [
+        "right soleus"
+      ],
+      "laterality": "bilateral",
+      "vertexCount": 5348
+    },
+    {
+      "id": "tibialis-anterior",
+      "fmas": [
+        "FMA22544"
+      ],
+      "sourceNames": [
+        "right tibialis anterior"
+      ],
+      "laterality": "bilateral",
+      "vertexCount": 4408
+    },
+    {
+      "id": "erector-spinae",
+      "fmas": [
+        "FMA22740",
+        "FMA22742",
+        "FMA22744",
+        "FMA22751",
+        "FMA22754",
+        "FMA22757",
+        "FMA22779"
+      ],
+      "sourceNames": [
+        "right iliocostalis lumborum",
+        "right iliocostalis thoracis",
+        "right iliocostalis cervicis",
+        "right longissimus thoracis",
+        "right longissimus capitis",
+        "right longissimus cervicis",
+        "right spinalis thoracis"
+      ],
+      "laterality": "bilateral",
+      "vertexCount": 82750
+    },
+    {
+      "id": "forearm-flexors",
+      "fmas": [
+        "FMA38460",
+        "FMA38470",
+        "FMA38479",
+        "FMA38482",
+        "FMA38617",
+        "FMA38619"
+      ],
+      "sourceNames": [
+        "right flexor carpi radialis",
+        "right flexor digitorum superficialis",
+        "right flexor digitorum profundus",
+        "right flexor pollicis longus",
+        "humeral head of right flexor carpi ulnaris",
+        "ulnar head of right flexor carpi ulnaris"
+      ],
+      "laterality": "bilateral",
+      "vertexCount": 33604
+    },
+    {
+      "id": "forearm-extensors",
+      "fmas": [
+        "FMA38495",
+        "FMA38498",
+        "FMA38501",
+        "FMA38504",
+        "FMA38507",
+        "FMA38519",
+        "FMA38522",
+        "FMA38525"
+      ],
+      "sourceNames": [
+        "right extensor carpi radialis longus",
+        "right extensor carpi radialis brevis",
+        "right extensor digitorum",
+        "right extensor digiti minimi",
+        "right extensor carpi ulnaris",
+        "right extensor pollicis brevis",
+        "right extensor pollicis longus",
+        "right extensor indicis"
+      ],
+      "laterality": "bilateral",
+      "vertexCount": 28860
+    }
+  ]
+}
