@@ -12,7 +12,9 @@ import {
   SAFE_ORBIT_MIN,
   catalogDolly,
 } from '@/atlas/focusAim'
+import { JUMP_BY_ID, JUMP_MS, regionDolly, type JumpRegionId } from '@/atlas/jumpTo'
 import { LEAN_MS, MUSCLE_LEAN_DELAY_FRAMES, deferLeanFor, easeOutCubic, selectLean } from '@/atlas/selectLean'
+import { getStructure } from '@/atlas/structures'
 
 type DampedControls = OrbitControlsImpl & {
   sphericalDelta?: { set: (t: number, p: number, r: number) => void }
@@ -33,7 +35,7 @@ type LeanAnim = {
   duration: number
 }
 
-/** Re-apply catalog dolly for the whole Focus session so OrbitControls cannot restore lean range. */
+/** Catalog Focus re-applies every frame so Orbit cannot restore lean range. Jump eases a region frame once. */
 
 function snapHome(c: DampedControls, camera: PerspectiveCamera) {
   camera.near = HOME_CAMERA.near
@@ -71,8 +73,36 @@ function applyCatalogDolly(c: DampedControls, camera: PerspectiveCamera, selecte
   camera.lookAt(pose.target)
 }
 
+function prepareRegionEase(c: DampedControls, camera: PerspectiveCamera) {
+  camera.near = SAFE_DOLLY_NEAR
+  camera.fov = HOME_CAMERA.fov
+  camera.updateProjectionMatrix()
+  c.minDistance = FOCUS_MIN_DISTANCE
+  c.maxDistance = SAFE_ORBIT_MAX
+  c.enableDamping = false
+  c.sphericalDelta?.set(0, 0, 0)
+  c.panOffset?.set(0, 0, 0)
+}
+
+function finishRegionEase(c: DampedControls) {
+  c.enableDamping = true
+  c.minDistance = FOCUS_MIN_DISTANCE
+  c.maxDistance = SAFE_ORBIT_MAX
+  c.sphericalDelta?.set(0, 0, 0)
+  c.panOffset?.set(0, 0, 0)
+  c.update()
+  c.saveState()
+}
+
 function readPose(c: DampedControls, camera: PerspectiveCamera): Pose {
   return { pos: camera.position.clone(), target: c.target.clone() }
+}
+
+function regionFrameFor(id: JumpRegionId, selected: Structure | null) {
+  const region = JUMP_BY_ID[id]
+  const leaf = getStructure(region.leafId) ?? selected
+  if (!leaf) return null
+  return regionDolly(region, leaf)
 }
 
 export function FocusRig({
@@ -80,7 +110,7 @@ export function FocusRig({
 }: {
   controls: RefObject<OrbitControlsImpl | null>
 }) {
-  const { selected, viewMode, viewEpoch, focusNonce } = useAtlas()
+  const { selected, viewMode, viewEpoch, focusNonce, jumpRegionId } = useAtlas()
   const camera = useThree((s) => s.camera) as PerspectiveCamera
   const booted = useRef(false)
   const lastEpoch = useRef(viewEpoch)
@@ -90,24 +120,26 @@ export function FocusRig({
   const pendingLean = useRef<{ from: Pose; to: Pose } | null>(null)
   const viewModeRef = useRef(viewMode)
   const selectedRef = useRef(selected)
+  const jumpRegionIdRef = useRef(jumpRegionId)
   viewModeRef.current = viewMode
   selectedRef.current = selected
+  jumpRegionIdRef.current = jumpRegionId
 
   useEffect(() => {
     let cancelled = false
 
-    const startLean = (c: DampedControls, from: Pose, to: Pose) => {
+    const startLean = (c: DampedControls, from: Pose, to: Pose, duration = LEAN_MS) => {
       anim.current = {
         fromPos: from.pos.clone(),
         fromTarget: from.target.clone(),
         toPos: to.pos.clone(),
         toTarget: to.target.clone(),
         start: performance.now(),
-        duration: LEAN_MS,
+        duration,
       }
       c.minDistance = FOCUS_MIN_DISTANCE
       c.maxDistance = SAFE_ORBIT_MAX
-      c.enableDamping = true
+      c.enableDamping = duration === JUMP_MS ? false : true
       c.sphericalDelta?.set(0, 0, 0)
       c.panOffset?.set(0, 0, 0)
     }
@@ -129,6 +161,23 @@ export function FocusRig({
 
       const epochChanged = viewEpoch !== lastEpoch.current
       lastEpoch.current = viewEpoch
+
+      if (viewMode === 'focus' && jumpRegionId) {
+        const regionFrame = regionFrameFor(jumpRegionId, selected)
+        if (regionFrame) {
+          leanDelay.current = 0
+          pendingLean.current = null
+          prepareRegionEase(c, camera)
+          const now = readPose(c, camera)
+          startLean(
+            c,
+            now,
+            { pos: regionFrame.position, target: regionFrame.target },
+            JUMP_MS,
+          )
+          return
+        }
+      }
 
       if (viewMode === 'focus' && selected) {
         anim.current = null
@@ -181,7 +230,7 @@ export function FocusRig({
     return () => {
       cancelled = true
     }
-  }, [camera, controls, selected, viewMode, viewEpoch, focusNonce])
+  }, [camera, controls, selected, viewMode, viewEpoch, focusNonce, jumpRegionId])
 
   useFrame(() => {
     const c = controls.current as DampedControls | null
@@ -189,6 +238,27 @@ export function FocusRig({
 
     const mode = viewModeRef.current
     const part = selectedRef.current
+    const jumpId = jumpRegionIdRef.current
+
+    if (mode === 'focus' && jumpId) {
+      leanDelay.current = 0
+      pendingLean.current = null
+      const a = anim.current
+      if (!a) return
+      const t = (performance.now() - a.start) / a.duration
+      const e = easeOutCubic(t)
+      camera.position.lerpVectors(a.fromPos, a.toPos, e)
+      c.object.position.copy(camera.position)
+      c.target.lerpVectors(a.fromTarget, a.toTarget, e)
+      c.sphericalDelta?.set(0, 0, 0)
+      c.update()
+      if (t >= 1) {
+        anim.current = null
+        finishRegionEase(c)
+      }
+      return
+    }
+
     if (mode === 'focus' && part) {
       anim.current = null
       leanDelay.current = 0

@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import { toggleHotSystems } from './hotSystems'
+import { JUMP_BY_ID, type JumpRegionId } from './jumpTo'
 import { filterStructuresForM2Coverage } from './muscleReveal'
 import { dropSelectionIfCold, dropSelectionIfCoverageOff } from './pickable'
 import { noteAtlasPick, restoreStagePicks } from './pointerSession'
@@ -28,12 +29,14 @@ type AtlasContextValue = {
   railOpen: boolean
   viewEpoch: number
   focusNonce: number
+  jumpRegionId: JumpRegionId | null
   selected: Structure | null
   visibleStructures: Structure[]
   toggleSystem: (id: SystemId) => void
   toggleM2Coverage: () => void
   enableM2Coverage: () => void
   select: (id: string | null) => void
+  jumpTo: (id: JumpRegionId) => void
   setQuery: (q: string) => void
   enterFocus: () => void
   exitFocus: () => void
@@ -60,6 +63,7 @@ export function AtlasProvider({ children }: { children: ReactNode }) {
   const [railOpen, setRailOpen] = useState(false)
   const [viewEpoch, setViewEpoch] = useState(0)
   const [focusNonce, setFocusNonce] = useState(0)
+  const [jumpRegionId, setJumpRegionId] = useState<JumpRegionId | null>(null)
   const [sceneReady, setSceneReady] = useState(false)
   const [skeletonLoad, setSkeletonLoad] = useState<SkeletonLoadState>(INITIAL_SKELETON_LOAD)
 
@@ -96,6 +100,7 @@ export function AtlasProvider({ children }: { children: ReactNode }) {
           // look like a remount. Bones stay mounted; visibility snaps back.
           setIsolated(false)
           setViewMode('default')
+          setJumpRegionId(null)
         }
         return kept
       })
@@ -113,6 +118,7 @@ export function AtlasProvider({ children }: { children: ReactNode }) {
           if (sel && !kept) {
             setIsolated(false)
             setViewMode('default')
+            setJumpRegionId(null)
           }
           return kept
         })
@@ -128,6 +134,7 @@ export function AtlasProvider({ children }: { children: ReactNode }) {
 
   const select = useCallback((id: string | null) => {
     if (id) noteAtlasPick()
+    setJumpRegionId(null)
     setSelectedId(id)
     if (!id) {
       setViewMode('default')
@@ -135,7 +142,25 @@ export function AtlasProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const jumpTo = useCallback((id: JumpRegionId) => {
+    const region = JUMP_BY_ID[id]
+    if (!region) return
+    noteAtlasPick()
+    setHotSystems((cur) => {
+      if (cur.includes('skeleton')) return cur
+      if (cur.length < 2) return [...cur, 'skeleton']
+      return ['skeleton', cur[cur.length - 1]]
+    })
+    setJumpRegionId(id)
+    setSelectedId(region.leafId)
+    setIsolated(false)
+    setViewMode('focus')
+    setRailOpen(false)
+    setFocusNonce((n) => n + 1)
+  }, [])
+
   const enterFocus = useCallback(() => {
+    setJumpRegionId(null)
     setViewMode('focus')
     setRailOpen(false)
     setFocusNonce((n) => n + 1)
@@ -144,6 +169,7 @@ export function AtlasProvider({ children }: { children: ReactNode }) {
   const requestFocus = enterFocus
 
   const exitFocus = useCallback(() => {
+    setJumpRegionId(null)
     setViewMode('default')
     setViewEpoch((n) => n + 1)
   }, [])
@@ -151,9 +177,11 @@ export function AtlasProvider({ children }: { children: ReactNode }) {
   const toggleFocus = useCallback(() => {
     setViewMode((m) => {
       if (m === 'focus') {
+        setJumpRegionId(null)
         setViewEpoch((n) => n + 1)
         return 'default'
       }
+      setJumpRegionId(null)
       setRailOpen(false)
       return 'focus'
     })
@@ -169,6 +197,7 @@ export function AtlasProvider({ children }: { children: ReactNode }) {
 
   const resetView = useCallback(() => {
     setSelectedId(null)
+    setJumpRegionId(null)
     setViewMode('default')
     setIsolated(false)
     setViewEpoch((n) => n + 1)
@@ -211,12 +240,14 @@ export function AtlasProvider({ children }: { children: ReactNode }) {
       railOpen,
       viewEpoch,
       focusNonce,
+      jumpRegionId,
       selected,
       visibleStructures,
       toggleSystem,
       toggleM2Coverage,
       enableM2Coverage,
       select,
+      jumpTo,
       setQuery,
       enterFocus,
       exitFocus,
@@ -240,12 +271,14 @@ export function AtlasProvider({ children }: { children: ReactNode }) {
       railOpen,
       viewEpoch,
       focusNonce,
+      jumpRegionId,
       selected,
       visibleStructures,
       toggleSystem,
       toggleM2Coverage,
       enableM2Coverage,
       select,
+      jumpTo,
       enterFocus,
       exitFocus,
       toggleFocus,

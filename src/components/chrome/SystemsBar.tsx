@@ -1,9 +1,12 @@
+import { useState } from 'react'
 import { useAtlas } from '@/atlas/AtlasProvider'
 import { SYSTEMS } from '@/atlas/systems'
+import { JumpToList, JumpToToggle } from '@/components/chrome/JumpTo'
 import { cn } from '@/lib/utils'
 
 export function SystemsBar() {
-  const { hotSystems, m2Coverage, toggleSystem, toggleM2Coverage } = useAtlas()
+  const { hotSystems, m2Coverage, jumpRegionId, jumpTo, toggleSystem, toggleM2Coverage } = useAtlas()
+  const [jumpOpen, setJumpOpen] = useState(false)
   const muscleHot = hotSystems.includes('muscle')
 
   return (
@@ -30,7 +33,17 @@ export function SystemsBar() {
             </button>
           )
         })}
+        <JumpToToggle open={jumpOpen} onToggle={() => setJumpOpen((v) => !v)} />
       </div>
+      {jumpOpen ? (
+        <JumpToList
+          activeId={jumpRegionId}
+          onPick={(id) => {
+            jumpTo(id)
+            setJumpOpen(false)
+          }}
+        />
+      ) : null}
       {muscleHot ? (
         <div className="glass-panel flex flex-wrap items-center gap-1.5 rounded-full px-2 py-1.5">
           <button
