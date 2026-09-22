@@ -6,10 +6,15 @@ import { LIVE_MUSCLE_IDS, applyMuscleCopy, muscleCopy } from './muscleCopy'
 import { STRUCTURE_BY_ID, STRUCTURES } from './structures'
 
 test('densify muscles have real Function / Articulates / blurb', () => {
-  assert.equal(LIVE_MUSCLE_IDS.length, 20)
+  assert.equal(LIVE_MUSCLE_IDS.length, 57)
   const live = STRUCTURES.filter((s) => s.system === 'muscle')
-  assert.equal(live.length, 20)
-  assert.equal(STRUCTURE_BY_ID.latissimus, undefined)
+  assert.equal(live.length, 57)
+  assert.ok(STRUCTURE_BY_ID.latissimus)
+  assert.equal(STRUCTURE_BY_ID.sternocleidomastoid, undefined)
+  assert.equal(
+    live.some((row) => /sternocleidomastoid|\bscm\b|platysma|orbicularis/i.test(row.id + row.name)),
+    false,
+  )
   for (const id of LIVE_MUSCLE_IDS) {
     const row = STRUCTURE_BY_ID[id]
     assert.ok(row, id)
@@ -25,7 +30,7 @@ test('densify muscles have real Function / Articulates / blurb', () => {
     assert.equal(BOILERPLATE_RE.test(`${row.function} ${row.relation} ${row.blurb}`), false, id)
     assert.equal(/applied at runtime|See boneCopy|kit boilerplate/i.test(row.blurb), false, id)
     assert.match(row.kind, /mesh/i)
-    assert.equal(row.source, 'bodyparts3d')
+    assert.equal(row.source, 'open3d')
   }
 })
 

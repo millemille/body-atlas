@@ -3,7 +3,7 @@ import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { Mesh } from 'three'
 
 export const MUSCLE_URL = '/atlas/muscles.glb'
-export const MUSCLE_BYTES = 15_831_900
+export const MUSCLE_BYTES = 7_325_548
 
 function concat(chunks: Uint8Array[]) {
   const n = chunks.reduce((sum, c) => sum + c.byteLength, 0)

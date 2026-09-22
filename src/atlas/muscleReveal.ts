@@ -1,3 +1,4 @@
+import { KIT_EXTRA_WAVES } from './generated/muscleWaves'
 import { LIVE_MUSCLE_IDS } from './muscleCopy'
 
 /** Iron-era majors. Painted before any M2 geometry exists. */
@@ -15,6 +16,7 @@ export const M1_WAVES = [
   ['soleus'],
   ['iliopsoas'],
   ['forearm-flexors'],
+  ...KIT_EXTRA_WAVES,
 ] as const
 
 /** Mounted only after the chrome “More coverage (M2)” toggle — never on Muscle ON. */

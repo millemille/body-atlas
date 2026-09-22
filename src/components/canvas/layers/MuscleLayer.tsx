@@ -18,7 +18,7 @@ function geometriesById(root: Group): Map<string, BufferGeometry> {
 }
 
 /**
- * Live Muscle path: BodyParts3D leaf groups from muscles.glb, first-hit.
+ * Live Muscle path: Open3D leaves from muscles.glb, first-hit. Latissimus included.
  * Procedural gels stay parked — they are not mounted.
  */
 export function MuscleLayer() {

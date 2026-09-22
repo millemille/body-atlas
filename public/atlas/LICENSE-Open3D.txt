@@ -1,0 +1,6 @@
+Open3Dmodel muscle leaves in muscles.glb
+AnatomyTOOL / Open3D project, LUMC, MUMC+ and contributors.
+License: Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0).
+https://anatomytool.org/open3dmodel
+Textures were omitted. Some Open3D texture maps are CC BY-NC-SA and are not shipped.
+The atlas applies its own untextured muscle material.

@@ -25,7 +25,7 @@ export function muscleRaycast(
   intersects: Intersection[],
 ) {
   const id = this.userData.atlasId as string | undefined
-  const source = this.userData.source as 'bodyparts3d' | 'interim' | undefined
+  const source = this.userData.source as 'bodyparts3d' | 'open3d' | 'interim' | undefined
   if (skipMuscleOnBackRay(id, raycaster.ray.origin, raycaster.ray.direction, undefined, source)) {
     return
   }
