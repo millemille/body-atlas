@@ -65,7 +65,7 @@ const COPY: Record<string, MuscleCopy> = {
     function: 'Elevates, retracts, and rotates the scapula; upper fibers also extend the neck.',
     relation: 'Occiput, nuchal ligament, and spinous processes C7–T12 to the clavicle, acromion, and scapular spine.',
     blurb:
-      'Kite-shaped upper-back volume from the neck toward both shoulders. Descending, transverse, and ascending parts are one mesh this pass.',
+      'Upper-back sheet from the nuchal line toward both shoulders. The descending fibers of this leaf reach the occiput. Sternocleidomastoid is not added. Descending, transverse, and ascending parts stay one mesh.',
   },
   latissimus: {
     function: 'Adducts, extends, and internally rotates the humerus; the climbing / rowing muscle of the back.',

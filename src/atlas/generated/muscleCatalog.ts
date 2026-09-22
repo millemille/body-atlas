@@ -75,8 +75,8 @@ export const MUSCLE_MESH_PARTS: Structure[] = [
     function: '',
     relation: '',
     blurb: '',
-    position: [0.00000, 1.37036, 0.03858],
-    focusDistance: 0.91,
+    position: [0.00000, 1.39106, 0.03858],
+    focusDistance: 0.92,
     source: 'open3d',
   },
   {

@@ -12,8 +12,9 @@ xiphoid wall — the L5 vertebral body is not the belly surface. Obliques lose
 the midline aponeurosis so they stay lateral. Posterior leaves shift only when
 they float behind the skeleton.
 
-Every leaf then drops triangles in the mid-scapular blade (BLADE_X_MAX). Does
-not invent SCM, face, or deep-neck leaves the kit does not ship.
+Every leaf then drops triangles in the mid-scapular blade (BLADE_X_MAX). The
+existing trapezius peak is seated on the superior nuchal line. Does not invent
+SCM, face, or deep-neck leaves the kit does not ship.
 """
 
 from __future__ import annotations
@@ -50,6 +51,11 @@ BLADE_Z_MAX = 0.08
 # Rectus spans about ±0.08. Inside this, the front midline stays rectus.
 OBLIQUE_MEDIAL_X = 0.07
 LATERAL_ABDOMEN = {"external-oblique", "internal-oblique", "transversus-abdominis"}
+# Medial trapezius peak only. Below the hinge is the shoulder kite.
+NAPE_HINGE_Y = 1.50
+NAPE_X_MAX = 0.05
+NAPE_PLATE = 0.008
+NAPE_LIFT = 0.006
 
 # id, name, region, side, seat, source mesh names
 # side: both | left | right. Open3D ".r" is atlas left.
@@ -568,6 +574,18 @@ def bone_boxes(skel: trimesh.Scene, positions: dict[str, np.ndarray]) -> list[di
     return boxes
 
 
+def bone_mesh(skel: trimesh.Scene, positions: dict[str, np.ndarray], bone_id: str) -> trimesh.Trimesh:
+    origin = positions[bone_id]
+    for node in skel.graph.nodes_geometry:
+        if str(node) != bone_id:
+            continue
+        transform, geom_name = skel.graph[node]
+        geom = skel.geometry[geom_name]
+        pts = trimesh.transform_points(np.asarray(geom.vertices), transform)
+        return trimesh.Trimesh(vertices=pts + origin, faces=np.asarray(geom.faces), process=False)
+    raise SystemExit(f"missing bone {bone_id}")
+
+
 def bounds_center(mesh: trimesh.Trimesh) -> np.ndarray:
     lo, hi = mesh.bounds
     return (lo + hi) / 2
@@ -765,6 +783,72 @@ def posterior_shift(mesh: trimesh.Trimesh, boxes: list[dict]) -> float:
     return shift
 
 
+def nuchal_ridge(occ_vertices: np.ndarray) -> np.ndarray:
+    """Posterior ridge of the occiput: the superior nuchal line on this skull."""
+    ov = np.asarray(occ_vertices, dtype=float)
+    ridge = []
+    for x in np.linspace(-0.055, 0.055, 23):
+        sel = ov[(np.abs(ov[:, 0] - x) < 0.006) & (ov[:, 1] > 1.59) & (ov[:, 1] < 1.65)]
+        if len(sel) < 4:
+            continue
+        ridge.append(sel[np.argmin(sel[:, 2])])
+    if len(ridge) < 8:
+        raise SystemExit("occipital nuchal ridge is missing")
+    return np.asarray(ridge, dtype=float)
+
+
+def _ridge_yz(ridge: np.ndarray, x: float) -> tuple[float, float]:
+    d = np.abs(ridge[:, 0] - x)
+    order = np.argsort(d)[:3]
+    w = 1.0 / (d[order] + 1e-4)
+    w /= w.sum()
+    return float(np.dot(w, ridge[order, 1])), float(np.dot(w, ridge[order, 2]))
+
+
+def seat_nape(mesh: trimesh.Trimesh, occ_vertices: np.ndarray) -> int:
+    """Pull the existing trapezius peak up and back onto the nuchal line.
+
+    The Open3D leaf is a kite on the shoulders. Its medial apex stops in front
+    of the neck, short of the superior nuchal line. Vertices already on that
+    peak move onto the occipital ridge. The shoulder kite stays. This does not
+    add a sternocleidomastoid leaf.
+    """
+    ridge = nuchal_ridge(occ_vertices)
+    v = np.array(mesh.vertices, dtype=float)
+    peak = (v[:, 1] > NAPE_HINGE_Y) & (np.abs(v[:, 0]) <= NAPE_X_MAX)
+    if int(peak.sum()) < 32:
+        raise SystemExit("trapezius has no medial peak to seat on the nape")
+    edge_x = np.linspace(-NAPE_X_MAX, NAPE_X_MAX, 21)
+    edge_y = np.full(len(edge_x), np.nan)
+    for i, x in enumerate(edge_x):
+        sel = peak & (np.abs(v[:, 0] - x) < 0.008)
+        if np.any(sel):
+            edge_y[i] = float(v[sel, 1].max())
+    known = np.isfinite(edge_y)
+    edge_y = np.interp(edge_x, edge_x[known], edge_y[known])
+
+    def edge_at(x: float) -> float:
+        d = np.abs(edge_x - x)
+        order = np.argsort(d)[:2]
+        w = 1.0 / (d[order] + 1e-4)
+        w /= w.sum()
+        return float(np.dot(w, edge_y[order]))
+
+    moved = 0
+    for i in np.flatnonzero(peak):
+        span = max(edge_at(float(v[i, 0])) - NAPE_HINGE_Y, 1e-4)
+        t = float(np.clip((v[i, 1] - NAPE_HINGE_Y) / span, 0.0, 1.0))
+        wy = t * t * (3.0 - 2.0 * t)
+        tz = float(np.clip(t / 0.55, 0.0, 1.0))
+        wz = tz * tz * (3.0 - 2.0 * tz)
+        ny, nz = _ridge_yz(ridge, float(v[i, 0]))
+        v[i, 1] = (1.0 - wy) * v[i, 1] + wy * (ny + NAPE_LIFT)
+        v[i, 2] = (1.0 - wz) * v[i, 2] + wz * (nz - NAPE_PLATE)
+        moved += 1
+    mesh.vertices = v
+    return moved
+
+
 def anterior_wall(boxes: list[dict], bone_id: str) -> float:
     bone = next(b for b in boxes if b["id"] == bone_id)
     return float(bone["max"][2])
@@ -846,7 +930,9 @@ def main() -> None:
     lower = index_meshes(load_scene(LOWER))
     pools = [thorax, upper, lower]
     positions = catalog_positions(SKEL_TS)
-    boxes = bone_boxes(load_scene(SKEL_GLB), positions)
+    skel = load_scene(SKEL_GLB)
+    boxes = bone_boxes(skel, positions)
+    occipital = bone_mesh(skel, positions, "occipital")
     delta = rigid_delta(thorax, positions)
     print("delta", np.round(delta, 4))
 
@@ -880,6 +966,9 @@ def main() -> None:
         elif seat == "back":
             shift = posterior_shift(merged, boxes)
             print(f"  seat back {leaf_id} {shift:+.4f}")
+        if leaf_id == "trapezius":
+            moved = seat_nape(merged, occipital.vertices)
+            print(f"  nape {leaf_id} moved={moved}")
         if leaf_id in LATERAL_ABDOMEN:
             dropped = keep_lateral(merged, OBLIQUE_MEDIAL_X)
             print(f"  lateral {leaf_id} drop={dropped:.1%}")
@@ -963,6 +1052,24 @@ def main() -> None:
     print(f"  lateral cuff {lateral}")
     if lateral is None or lateral[0] != "rotator-cuff":
         raise SystemExit(f"lateral cuff ray is {lateral}, want rotator-cuff")
+    if any(row["id"] == "sternocleidomastoid" for row in rows):
+        raise SystemExit("SCM was invented")
+
+    def nape_ray(x: float, y: float) -> None:
+        hit = back_owner(x, y)
+        bone = posterior_hit(occipital, x, y)
+        print(f"  nape x={x:.2f} y={y:.2f} {hit} bone={None if bone is None else round(bone, 4)}")
+        if hit is None or hit[0] != "trapezius" or bone is None or not hit[1] < bone:
+            raise SystemExit(f"nape x={x:.2f} y={y:.2f} is {hit}, bone={bone}, want trapezius behind the occiput")
+
+    for x, y in ((0.0, 1.62), (0.0, 1.63), (0.02, 1.62), (-0.02, 1.62), (0.02, 1.63), (-0.02, 1.63)):
+        nape_ray(x, y)
+    for x, y in ((0.0, 1.65), (0.02, 1.65), (-0.02, 1.65)):
+        hit = back_owner(x, y)
+        bone = posterior_hit(occipital, x, y)
+        print(f"  above nuchal x={x:.2f} y={y:.2f} {hit} bone={None if bone is None else round(bone, 4)}")
+        if hit and hit[0] == "trapezius" and bone is not None and hit[1] < bone:
+            raise SystemExit(f"trapezius covers the skull above the nuchal line at x={x:.2f} y={y:.2f}")
 
     scene.export(OUT_GLB)
     OUT_MANIFEST.write_text(json.dumps({"count": len(rows), "source": "open3dmodel", "groups": manifest}, indent=2) + "\n")
