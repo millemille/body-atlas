@@ -1,42 +1,8 @@
 import { useLayoutEffect, useMemo } from 'react'
-import { CatmullRomCurve3, Quaternion, TubeGeometry, Vector3 } from 'three'
+import { CatmullRomCurve3, TubeGeometry, Vector3 } from 'three'
 import { AtlasMesh } from './AtlasMesh'
 import { SystemMaterial } from './materials'
 import type { SystemId } from '@/atlas/types'
-
-export function BoneShaft({
-  from,
-  to,
-  radius,
-  system = 'skeleton',
-}: {
-  from: [number, number, number]
-  to: [number, number, number]
-  radius: number
-  system?: SystemId
-}) {
-  const { position, quaternion, length } = useMemo(() => {
-    const a = new Vector3(...from)
-    const b = new Vector3(...to)
-    const dir = b.clone().sub(a)
-    const len = dir.length()
-    const position = a.clone().add(b).multiplyScalar(0.5)
-    const quaternion = new Quaternion().setFromUnitVectors(
-      new Vector3(0, 1, 0),
-      dir.clone().normalize(),
-    )
-    return { position, quaternion, length: len }
-  }, [from, to])
-
-  const cyl = Math.max(0.012, length - radius * 2)
-
-  return (
-    <AtlasMesh position={position} quaternion={quaternion}>
-      <capsuleGeometry args={[radius, cyl, 6, 14]} />
-      <SystemMaterial kind={system} />
-    </AtlasMesh>
-  )
-}
 
 export function Tube({
   points,

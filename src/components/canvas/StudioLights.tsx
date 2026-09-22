@@ -8,6 +8,9 @@ import {
   FILL_INTENSITY,
   FOCUS_EXPOSURE,
   HOME_EXPOSURE,
+  FRONT_COLOR,
+  FRONT_INTENSITY,
+  FRONT_POS,
   IBL_INTENSITY,
   KEY_COLOR,
   KEY_INTENSITY,
@@ -67,6 +70,12 @@ export function StudioLights() {
         position={[...RIM_POS]}
         intensity={RIM_INTENSITY}
         color={RIM_COLOR}
+        castShadow={false}
+      />
+      <directionalLight
+        position={[...FRONT_POS]}
+        intensity={FRONT_INTENSITY}
+        color={FRONT_COLOR}
         castShadow={false}
       />
       <StudioIbl />

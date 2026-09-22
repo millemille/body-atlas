@@ -93,7 +93,6 @@ export function SkeletonLayer() {
             position={part.position}
             castShadow={false}
             receiveShadow={false}
-            frustumCulled={false}
           >
             <primitive object={geometry} attach="geometry" />
             <SystemMaterial kind="skeleton" />

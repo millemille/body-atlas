@@ -12,17 +12,22 @@ import {
   SAFE_ORBIT_MIN,
   catalogDolly,
 } from '@/atlas/focusAim'
-import { JUMP_BY_ID, JUMP_MS, regionDolly, type JumpRegionId } from '@/atlas/jumpTo'
+import { easeRegionPose, JUMP_BY_ID, JUMP_MS, regionDolly, type JumpRegionId } from '@/atlas/jumpTo'
+import { setOrbitHeld } from '@/atlas/pointerSession'
 import { LEAN_MS, MUSCLE_LEAN_DELAY_FRAMES, deferLeanFor, easeOutCubic, selectLean } from '@/atlas/selectLean'
 import { getStructure } from '@/atlas/structures'
 
 type DampedControls = OrbitControlsImpl & {
   sphericalDelta?: { set: (t: number, p: number, r: number) => void }
   panOffset?: Vector3
+  scale?: number
   minDistance: number
   enableDamping: boolean
   setScale?: (scale: number) => void
 }
+
+const easePos = new Vector3()
+const easeTarget = new Vector3()
 
 type Pose = { pos: Vector3; target: Vector3 }
 
@@ -59,9 +64,11 @@ function snapHome(c: DampedControls, camera: PerspectiveCamera) {
  */
 function applyCatalogDolly(c: DampedControls, camera: PerspectiveCamera, selected: Structure) {
   const pose = catalogDolly(selected)
-  camera.near = SAFE_DOLLY_NEAR
-  camera.fov = HOME_CAMERA.fov
-  camera.updateProjectionMatrix()
+  if (camera.near !== SAFE_DOLLY_NEAR || camera.fov !== HOME_CAMERA.fov) {
+    camera.near = SAFE_DOLLY_NEAR
+    camera.fov = HOME_CAMERA.fov
+    camera.updateProjectionMatrix()
+  }
   c.minDistance = SAFE_ORBIT_MIN
   c.maxDistance = SAFE_ORBIT_MAX
   c.enableDamping = false
@@ -85,13 +92,16 @@ function prepareRegionEase(c: DampedControls, camera: PerspectiveCamera) {
 }
 
 function finishRegionEase(c: DampedControls) {
+  c.enabled = true
   c.enableDamping = true
   c.minDistance = FOCUS_MIN_DISTANCE
   c.maxDistance = SAFE_ORBIT_MAX
   c.sphericalDelta?.set(0, 0, 0)
   c.panOffset?.set(0, 0, 0)
+  if (c.scale !== undefined) c.scale = 1
   c.update()
   c.saveState()
+  setOrbitHeld(false)
 }
 
 function readPose(c: DampedControls, camera: PerspectiveCamera): Pose {
@@ -168,6 +178,8 @@ export function FocusRig({
           leanDelay.current = 0
           pendingLean.current = null
           prepareRegionEase(c, camera)
+          setOrbitHeld(true)
+          c.enabled = false
           const now = readPose(c, camera)
           startLean(
             c,
@@ -178,6 +190,9 @@ export function FocusRig({
           return
         }
       }
+
+      setOrbitHeld(false)
+      c.enabled = true
 
       if (viewMode === 'focus' && selected) {
         anim.current = null
@@ -229,6 +244,7 @@ export function FocusRig({
     aim()
     return () => {
       cancelled = true
+      setOrbitHeld(false)
     }
   }, [camera, controls, selected, viewMode, viewEpoch, focusNonce, jumpRegionId])
 
@@ -245,13 +261,16 @@ export function FocusRig({
       pendingLean.current = null
       const a = anim.current
       if (!a) return
+      c.enabled = false
       const t = (performance.now() - a.start) / a.duration
-      const e = easeOutCubic(t)
-      camera.position.lerpVectors(a.fromPos, a.toPos, e)
-      c.object.position.copy(camera.position)
-      c.target.lerpVectors(a.fromTarget, a.toTarget, e)
+      const e = easeOutCubic(t > 1 ? 1 : t)
+      easeRegionPose(a.fromPos, a.fromTarget, a.toPos, a.toTarget, e, easePos, easeTarget)
+      camera.position.copy(easePos)
+      c.target.copy(easeTarget)
+      camera.lookAt(easeTarget)
       c.sphericalDelta?.set(0, 0, 0)
-      c.update()
+      c.panOffset?.set(0, 0, 0)
+      if (c.scale !== undefined) c.scale = 1
       if (t >= 1) {
         anim.current = null
         finishRegionEase(c)
@@ -292,14 +311,18 @@ export function FocusRig({
     const a = anim.current
     if (!a) return
     const t = (performance.now() - a.start) / a.duration
-    const e = easeOutCubic(t)
+    const e = easeOutCubic(t > 1 ? 1 : t)
     camera.position.lerpVectors(a.fromPos, a.toPos, e)
-    c.object.position.copy(camera.position)
     c.target.lerpVectors(a.fromTarget, a.toTarget, e)
+    camera.lookAt(c.target)
     c.sphericalDelta?.set(0, 0, 0)
-    c.update()
-    if (t >= 1) anim.current = null
-  })
+    c.panOffset?.set(0, 0, 0)
+    if (t >= 1) {
+      anim.current = null
+      if (c.scale !== undefined) c.scale = 1
+      c.update()
+    }
+  }, 1)
 
   return null
 }

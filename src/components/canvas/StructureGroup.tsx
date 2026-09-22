@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber'
-import { useLayoutEffect, useMemo, useRef, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, type ReactNode } from 'react'
 import { Color, Group, MathUtils, Mesh, Vector3, type MeshPhysicalMaterial, type MeshStandardMaterial } from 'three'
 import { groupRaycast, markPickable, skipRaycast } from '@/atlas/atlasRaycast'
 import { useAtlas } from '@/atlas/AtlasProvider'
@@ -33,6 +33,17 @@ const hsl = { h: 0, s: 0, l: 0 }
 const work = new Color()
 const SELECT_GROW = 0.08
 const tmpScale = new Vector3()
+const paintedMats = new Set<Material>()
+const structureTicks = new Set<(dt: number) => void>()
+
+/** One scene tick instead of a useFrame subscription on every bone. */
+export function StructureMotion() {
+  useFrame((_, dt) => {
+    if (structureTicks.size === 0) return
+    for (const tick of structureTicks) tick(dt)
+  })
+  return null
+}
 
 function cubicOut(t: number) {
   const x = MathUtils.clamp(t, 0, 1)
@@ -44,7 +55,7 @@ function paintGroup(
   opacityValue: number,
   opts: { selected: boolean; rest: boolean; pickable: boolean; grow: number; focus: boolean },
 ) {
-  const painted = new Set<Material>()
+  paintedMats.clear()
   g.traverse((obj) => {
     if (!(obj instanceof Mesh)) return
     if (obj.userData.rim || obj.userData.skipFade) return
@@ -61,8 +72,8 @@ function paintGroup(
     for (const mat of mats) {
       const m = mat as Material
       if (!m || m.opacity === undefined || m.userData.skipFade) continue
-      if (painted.has(m)) continue
-      painted.add(m)
+      if (paintedMats.has(m)) continue
+      paintedMats.add(m)
       const base = (m.userData.baseOpacity as number | undefined) ?? 1
       const o = opacityValue * base
       m.opacity = o
@@ -176,46 +187,46 @@ export function StructureGroup({
     return 1
   }, [isolatedAway, rest, systemHot, viewMode])
 
-  useFrame((_, dt) => {
-    const g = root.current
-    if (!g) return
-    if (!systemHot) {
-      g.visible = false
-      return
+  useEffect(() => {
+    if (structure.system === 'muscle' || !systemHot || isolatedAway) return
+    const idle =
+      !selected &&
+      !rest &&
+      Math.abs(opacity.current - targetOpacity) < 0.004 &&
+      scaleT.current <= 0.01
+    if (idle) return
+
+    let stop = false
+    const tick = (dt: number) => {
+      if (stop) return
+      const g = root.current
+      if (!g) return
+      const fadeK = Math.min(1, dt / 0.2)
+      opacity.current += (targetOpacity - opacity.current) * fadeK
+      scaleT.current = MathUtils.clamp(scaleT.current + (selected ? dt : -dt) / 0.32, 0, 1)
+      const grow = 1 + SELECT_GROW * cubicOut(scaleT.current)
+      const opacitySettled = Math.abs(opacity.current - targetOpacity) <= 0.004
+      const scaleSettled = selected ? scaleT.current >= 1 : scaleT.current <= 0.01
+      g.scale.setScalar(1)
+      g.visible = true
+      paintGroup(g, opacity.current, {
+        selected,
+        rest,
+        pickable,
+        grow,
+        focus: viewMode === 'focus',
+      })
+      if (opacitySettled && scaleSettled) {
+        stop = true
+        structureTicks.delete(tick)
+      }
     }
-    if (isolatedAway) {
-      opacity.current = 0
-      g.visible = false
-      g.scale.setScalar(0.001)
-      return
+    structureTicks.add(tick)
+    return () => {
+      stop = true
+      structureTicks.delete(tick)
     }
-    const isMuscle = structure.system === 'muscle'
-    if (isMuscle) {
-      // Layout paints select / rest once. Per-frame gel mutation + scale grow
-      // was a fill-rate spike on first muscle pick.
-      opacity.current = targetOpacity
-      scaleT.current = 0
-      return
-    }
-    const fadeK = Math.min(1, dt / 0.2)
-    opacity.current += (targetOpacity - opacity.current) * fadeK
-    scaleT.current = MathUtils.clamp(scaleT.current + (selected ? dt : -dt) / 0.32, 0, 1)
-    const grow = 1 + SELECT_GROW * cubicOut(scaleT.current)
-    const moving =
-      selected ||
-      Math.abs(opacity.current - targetOpacity) > 0.004 ||
-      scaleT.current > 0.01
-    if (!moving && g.visible) return
-    g.scale.setScalar(1)
-    g.visible = true
-    paintGroup(g, opacity.current, {
-      selected,
-      rest,
-      pickable,
-      grow,
-      focus: viewMode === 'focus',
-    })
-  })
+  }, [isolatedAway, pickable, rest, selected, structure.system, systemHot, targetOpacity, viewMode])
 
   return (
     <StructureRenderProvider value={{ id, selected, hovered: false, pickable }}>

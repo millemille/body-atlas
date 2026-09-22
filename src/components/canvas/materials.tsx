@@ -1,6 +1,13 @@
 import { FrontSide } from 'three'
 import { BASE_OPACITY, SABRINA } from '@/atlas/colors'
-import { BONE_ENV_MAP, BONE_ROUGHNESS, MUSCLE_ENV_MAP, MUSCLE_ROUGHNESS } from '@/atlas/studioLook'
+import {
+  BONE_ENV_MAP,
+  BONE_ROUGHNESS,
+  MESH_MUSCLE_COLOR,
+  MESH_MUSCLE_ENV,
+  MESH_MUSCLE_OPACITY,
+  MESH_MUSCLE_ROUGHNESS,
+} from '@/atlas/studioLook'
 import type { SystemId } from '@/atlas/types'
 
 type MatKind = SystemId | 'mannequin' | 'vessel-core'
@@ -24,10 +31,7 @@ export function SystemMaterial({
             ? slate
               ? 0.02
               : 0.05
-            : kind === 'muscle'
-              ? 0.012
-              : 0.012
-    if (kind === 'muscle') m.userData.muscleGel = 1
+            : 0.012
   }
 
   if (kind === 'skeleton') {
@@ -54,17 +58,21 @@ export function SystemMaterial({
   if (kind === 'muscle') {
     return (
       <meshStandardMaterial
-        color={SABRINA.muscleRose}
-        roughness={MUSCLE_ROUGHNESS}
+        color={MESH_MUSCLE_COLOR}
+        roughness={MESH_MUSCLE_ROUGHNESS}
         metalness={0}
-        emissive={SABRINA.muscleRose}
-        emissiveIntensity={0.018}
-        envMapIntensity={MUSCLE_ENV_MAP}
+        emissive={MESH_MUSCLE_COLOR}
+        emissiveIntensity={0.035}
+        envMapIntensity={MESH_MUSCLE_ENV}
         transparent
-        opacity={baseOpacity}
-        depthWrite={false}
+        opacity={MESH_MUSCLE_OPACITY}
+        depthWrite
         side={FrontSide}
-        onUpdate={stash}
+        onUpdate={(m) => {
+          m.userData.baseOpacity = MESH_MUSCLE_OPACITY
+          m.userData.baseEmissive = 0.035
+          m.userData.muscleGel = 1
+        }}
       />
     )
   }

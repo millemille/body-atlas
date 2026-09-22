@@ -1,8 +1,12 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { Vector3 } from 'three'
+import { BASE_OPACITY } from './colors'
 import {
   BONE_ROUGHNESS,
+  MESH_MUSCLE_COLOR,
+  MESH_MUSCLE_OPACITY,
+  MESH_MUSCLE_ROUGHNESS,
   MUSCLE_ROUGHNESS,
   FOCUS_EXPOSURE,
   HOME_EXPOSURE,
@@ -25,4 +29,12 @@ test('Focus only nudges exposure; rest dim is −40% not a depth-kill', () => {
   assert.equal(REST_OPACITY, 0.6)
   assert.ok(BONE_ROUGHNESS >= 0.45 && BONE_ROUGHNESS <= 0.6)
   assert.ok(MUSCLE_ROUGHNESS >= 0.72 && MUSCLE_ROUGHNESS <= 0.88)
+})
+
+test('live mesh is firmer rose; gel opacity and satin stay parked', () => {
+  assert.equal(MESH_MUSCLE_COLOR.toLowerCase(), '#c47e76')
+  assert.ok(MESH_MUSCLE_OPACITY >= 0.88 && MESH_MUSCLE_OPACITY <= 0.92)
+  assert.ok(MESH_MUSCLE_ROUGHNESS >= 0.52 && MESH_MUSCLE_ROUGHNESS <= 0.64)
+  assert.equal(BASE_OPACITY.muscle, 0.5)
+  assert.ok(MUSCLE_ROUGHNESS > MESH_MUSCLE_ROUGHNESS)
 })

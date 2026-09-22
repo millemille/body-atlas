@@ -1,4 +1,4 @@
-import { Vector3 } from 'three'
+import { Spherical, Vector3 } from 'three'
 import { HOME_CAMERA } from './cameraHome'
 import { FOCUS_MIN_DISTANCE, FOCUS_VIEW, catalogDolly } from './focusAim'
 import { getStructure } from './structures'
@@ -93,4 +93,37 @@ export function regionFrameFor(id: JumpRegionId): RegionFrame {
 /** Catalog leaf dolly is a tighter snap; Jump must stay on the larger region box. */
 export function regionIsGentlerThanCatalog(region: JumpRegion, leaf = leafFor(region)) {
   return regionDolly(region, leaf).distance > catalogDolly(leaf).distance + 0.04
+}
+
+const fromSpherical = new Spherical()
+const toSpherical = new Spherical()
+const arcSpherical = new Spherical()
+const arcOffset = new Vector3()
+
+/**
+ * 820ms region dolly samples this with easeOutCubic.
+ * Offset is a spherical arc so the camera stays outside the body instead of
+ * cutting the chord between the two frames.
+ */
+export function easeRegionPose(
+  fromPos: Vector3,
+  fromTarget: Vector3,
+  toPos: Vector3,
+  toTarget: Vector3,
+  t: number,
+  outPos: Vector3,
+  outTarget: Vector3,
+) {
+  const e = t <= 0 ? 0 : t >= 1 ? 1 : t
+  outTarget.lerpVectors(fromTarget, toTarget, e)
+  fromSpherical.setFromVector3(arcOffset.copy(fromPos).sub(fromTarget))
+  toSpherical.setFromVector3(arcOffset.copy(toPos).sub(toTarget))
+  let dTheta = toSpherical.theta - fromSpherical.theta
+  if (dTheta > Math.PI) dTheta -= Math.PI * 2
+  else if (dTheta < -Math.PI) dTheta += Math.PI * 2
+  arcSpherical.radius = fromSpherical.radius + (toSpherical.radius - fromSpherical.radius) * e
+  arcSpherical.phi = fromSpherical.phi + (toSpherical.phi - fromSpherical.phi) * e
+  arcSpherical.theta = fromSpherical.theta + dTheta * e
+  arcOffset.setFromSpherical(arcSpherical)
+  outPos.copy(outTarget).add(arcOffset)
 }

@@ -3,8 +3,10 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
+import { Vector3 } from 'three'
 import { catalogDolly } from './focusAim'
 import {
+  easeRegionPose,
   JUMP_BY_ID,
   JUMP_MS,
   JUMP_REGIONS,
@@ -99,4 +101,28 @@ test('Jump chrome is in-flow with zero body pins', () => {
   assert.match(ui, /data-atlas-jump-list/)
   assert.match(rig, /JUMP_MS/)
   assert.match(rig, /regionFrame/)
+  assert.match(rig, /easeRegionPose/)
+})
+
+test('region ease is an outside arc that still lands on the region frame', () => {
+  const end = regionDolly(JUMP_BY_ID.back)
+  const fromPos = new Vector3(1.6, 1.1, 2.4)
+  const fromTarget = new Vector3(0, 0.9, 0)
+  const outPos = new Vector3()
+  const outTarget = new Vector3()
+  easeRegionPose(fromPos, fromTarget, end.position, end.target, 0, outPos, outTarget)
+  assert.ok(outPos.distanceTo(fromPos) < 1e-4)
+  assert.ok(outTarget.distanceTo(fromTarget) < 1e-4)
+  easeRegionPose(fromPos, fromTarget, end.position, end.target, 1, outPos, outTarget)
+  assert.ok(outPos.distanceTo(end.position) < 1e-4, `end pos ${outPos.distanceTo(end.position)}`)
+  assert.ok(outTarget.distanceTo(end.target) < 1e-4)
+  const midT = easeOutCubic(0.5)
+  easeRegionPose(fromPos, fromTarget, end.position, end.target, midT, outPos, outTarget)
+  const midR = outPos.distanceTo(outTarget)
+  const startR = fromPos.distanceTo(fromTarget)
+  const endR = end.position.distanceTo(end.target)
+  const lo = Math.min(startR, endR) - 1e-3
+  const hi = Math.max(startR, endR) + 1e-3
+  assert.ok(midR >= lo && midR <= hi, `mid radius ${midR} outside ${lo}..${hi}`)
+  assert.ok(midR > 0.45, 'arc stays off the body')
 })

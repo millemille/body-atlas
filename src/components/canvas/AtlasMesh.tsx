@@ -15,6 +15,11 @@ type MeshProps = ComponentProps<'mesh'> & {
 /** Soft porcelain-teal halo. Additive, not a hard MeshBasic stroke. */
 function SelectedRim({ on, soft }: { on: boolean; soft: boolean }) {
   const rim = useRef<Mesh>(null)
+  const inflate = useRef({ value: soft ? 0.0034 : 0.0052 })
+
+  useLayoutEffect(() => {
+    inflate.current.value = soft ? 0.0034 : 0.0052
+  }, [soft])
 
   useLayoutEffect(() => {
     const self = rim.current
@@ -29,7 +34,7 @@ function SelectedRim({ on, soft }: { on: boolean; soft: boolean }) {
   if (!on) return null
 
   return (
-    <mesh ref={rim} renderOrder={3} raycast={skipRaycast} frustumCulled={false}>
+    <mesh ref={rim} renderOrder={3} raycast={skipRaycast}>
       <meshBasicMaterial
         color="#A8F0EA"
         side={BackSide}
@@ -39,11 +44,14 @@ function SelectedRim({ on, soft }: { on: boolean; soft: boolean }) {
         blending={AdditiveBlending}
         toneMapped={false}
         onBeforeCompile={(shader) => {
-          shader.vertexShader = shader.vertexShader.replace(
-            '#include <begin_vertex>',
-            `#include <begin_vertex>
-             transformed += normalize(objectNormal) * ${soft ? '0.0034' : '0.0052'};`,
-          )
+          shader.uniforms.uInflate = inflate.current
+          shader.vertexShader = shader.vertexShader
+            .replace('#include <common>', '#include <common>\nuniform float uInflate;')
+            .replace(
+              '#include <begin_vertex>',
+              `#include <begin_vertex>
+             transformed += normalize(objectNormal) * uInflate;`,
+            )
         }}
       />
     </mesh>
@@ -127,11 +135,7 @@ export function AtlasMesh({ children, centered = true, ...props }: MeshProps) {
       }}
     >
       {children}
-      <SelectedRim
-        key={viewMode === 'focus' ? 'focus-halo' : 'home-halo'}
-        on={selected && !muscleGel}
-        soft={viewMode === 'focus'}
-      />
+      <SelectedRim on={selected && !muscleGel} soft={viewMode === 'focus'} />
     </mesh>
   )
 }

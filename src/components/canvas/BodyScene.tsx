@@ -1,6 +1,6 @@
 import { OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { useEffect, useRef, useState, type RefObject } from 'react'
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { MathUtils, MOUSE, Vector3 } from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { useAtlas } from '@/atlas/AtlasProvider'
@@ -20,6 +20,7 @@ import { installWebglContextGuard } from '@/atlas/gpuCrash'
 import { CANVAS_DPR, MUSCLE_MOUNT_MS } from '@/atlas/muscleReveal'
 import { resolveAtlasHits } from '@/atlas/pickPriority'
 import { FocusRig } from './FocusRig'
+import { StructureMotion } from './StructureGroup'
 import { SceneReady } from './SceneReady'
 import { StudioLights } from './StudioLights'
 import { MuscleLayer } from './layers/MuscleLayer'
@@ -74,9 +75,12 @@ function ClampOrbit({
     const c = controls.current
     if (!c || viewMode === 'focus') return
     const b = ORBIT_TARGET_BOUNDS
-    c.target.x = MathUtils.clamp(c.target.x, b.x[0], b.x[1])
-    c.target.y = MathUtils.clamp(c.target.y, b.y[0], b.y[1])
-    c.target.z = MathUtils.clamp(c.target.z, b.z[0], b.z[1])
+    const t = c.target
+    const x = MathUtils.clamp(t.x, b.x[0], b.x[1])
+    const y = MathUtils.clamp(t.y, b.y[0], b.y[1])
+    const z = MathUtils.clamp(t.z, b.z[0], b.z[1])
+    if (x === t.x && y === t.y && z === t.z) return
+    t.set(x, y, z)
   })
   return null
 }
@@ -171,28 +175,13 @@ function BindQA({
   return null
 }
 
-function BindOrbit({
-  controls,
-}: {
-  controls: RefObject<OrbitControlsImpl | null>
-}) {
-  useEffect(() => {
-    const bind = () => {
-      registerOrbitControls(controls.current)
-    }
-    bind()
-    const id = window.setInterval(bind, 400)
-    return () => {
-      window.clearInterval(id)
-      registerOrbitControls(null)
-    }
-  }, [controls])
-  return null
-}
-
 export function BodyScene() {
   const { select, viewEpoch } = useAtlas()
   const controls = useRef<OrbitControlsImpl>(null)
+  const attachControls = useCallback((node: OrbitControlsImpl | null) => {
+    controls.current = node
+    registerOrbitControls(node)
+  }, [])
 
   return (
     <SceneErrorBoundary resetKey={viewEpoch}>
@@ -236,8 +225,9 @@ export function BodyScene() {
         <MuscleGpuGuard />
         <BindPickPriority />
         <Figure />
+        <StructureMotion />
         <OrbitControls
-          ref={controls}
+          ref={attachControls}
           makeDefault
           enableDamping
           dampingFactor={0.05}
@@ -256,7 +246,6 @@ export function BodyScene() {
           }}
           onEnd={() => endPointer()}
         />
-        <BindOrbit controls={controls} />
         <BindQA controls={controls} />
         <ClampOrbit controls={controls} />
         <FocusRig controls={controls} />

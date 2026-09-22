@@ -12,9 +12,17 @@ type OrbitLike = {
 }
 
 let orbit: OrbitLike | null = null
+let orbitHeld = false
 
 export function registerOrbitControls(next: OrbitLike | null) {
   orbit = next
+  if (orbit) orbit.enabled = !orbitHeld
+}
+
+/** Jump dolly owns the camera for 820ms. Dock hover must not re-enable orbit mid-arc. */
+export function setOrbitHeld(held: boolean) {
+  orbitHeld = held
+  if (orbit) orbit.enabled = !held
 }
 
 function emitLive(next: boolean) {
@@ -73,7 +81,7 @@ function setStagePointerEvents(on: boolean) {
 }
 
 function setDockHover(over: boolean) {
-  if (orbit) orbit.enabled = !over
+  if (orbit) orbit.enabled = orbitHeld ? false : !over
   setStagePointerEvents(!over)
 }
 
@@ -144,7 +152,7 @@ export function tookAtlasPick() {
 
 export function restoreStagePicks() {
   setStagePointerEvents(true)
-  if (orbit) orbit.enabled = true
+  if (orbit) orbit.enabled = !orbitHeld
   clearAllPointerFlags()
 }
 
