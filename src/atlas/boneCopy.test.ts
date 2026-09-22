@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { BOILERPLATE_RE, applyBoneCopy, boneCopy } from './boneCopy'
 import { SKELETON_MESH_PARTS } from './generated/skeletonCatalog'
+import { VESSEL_MESH_COUNT } from './generated/vesselCatalog'
 import { STRUCTURE_BY_ID, STRUCTURES } from './structures'
 
 test('every densify bone has real copy, not kit boilerplate', () => {
@@ -29,7 +30,8 @@ test('nerves stay glyph copy; muscles and vessels are meshes', () => {
   assert.equal(BOILERPLATE_RE.test(nerve.function), false)
   assert.match(nerve.blurb, /glyph|stand-in/i)
   const vessels = STRUCTURES.filter((s) => s.system === 'vessel')
-  assert.equal(vessels.length, 5)
+  assert.equal(vessels.length, VESSEL_MESH_COUNT)
+  assert.ok(vessels.length >= 300)
   for (const vessel of vessels) {
     assert.equal(vessel.source, 'bodyparts3d')
     assert.match(vessel.kind, /mesh/i)

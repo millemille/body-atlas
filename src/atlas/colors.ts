@@ -15,8 +15,10 @@ export const SABRINA = {
   boneShade: '#C9BBA3',
   muscleRose: '#B86B6B',
   nerveTeal: '#3AD1C7',
-  vesselRuby: '#7A1F2B',
-  vesselVein: '#3D4E6B',
+  /** Bright arterial red. The old ruby sat on the void background. */
+  vesselRuby: '#FF4D42',
+  /** Bright venous blue. The old slate sat on the void background. */
+  vesselVein: '#3B96FF',
   organRose: '#B86B6B',
   organCoral: '#C48982',
   skin: '#D8D4CE',
@@ -26,7 +28,7 @@ export const BASE_OPACITY = {
   skeleton: 0.97,
   muscle: 0.5,
   nerve: 0.88,
-  vessel: 0.52,
+  vessel: 0.94,
   other: 0.42,
   mannequin: 0.08,
 } as const

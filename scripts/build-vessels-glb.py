@@ -1,21 +1,13 @@
 #!/usr/bin/env python3
-"""Bake the five vessel trunks that BodyParts3D actually ships.
+"""Bake every artery and vein mesh BodyParts3D 4.0 actually ships.
 
 Source: BodyParts3D (DBCLS) release 4.0, PART-OF tree, polygon reduction 99%,
-untextured OBJ. License CC BY-SA 2.1 Japan (same kit as the skeleton).
-No texture maps are in this zip, so nothing non-commercial is packed.
+untextured OBJ. License CC BY-SA 2.1 Japan. The zip has no texture maps.
 
-Only element files whose specific names are the named trunk (plus the parent
-trunk the source already tags on that file) are included:
-
-  aorta                 FJ1931 FJ1932 FJ3411 FJ3413 FJ3427
-  carotid-arteries      FJ3564 FJ3483
-  vena-cava             FJ3645 FJ3441 FJ3659
-  femoral-arteries      FJ2143 FJ2074
-  subclavian-arteries   FJ3579 FJ3479
-
-Downstream trees (internal carotid, vertebral, arm, deep femoral, genicular)
-are separate element files and are not imported. Nerves are not imported.
+Each polygon file is assigned to the most specific named artery, vein, vena,
+aorta, pulmonary trunk, coronary sinus, or cerebral arterial circle that
+lists it. Parent trees (systemic arterial tree, and so on) do not become
+leaves, and a file is not copied into its ancestors. Nerves are not imported.
 The muscle GLB is not touched.
 
 Seating uses the same bp3d_to_atlas transform as scripts/build-skeleton-glb.py.
@@ -23,185 +15,229 @@ Seating uses the same bp3d_to_atlas transform as scripts/build-skeleton-glb.py.
 
 from __future__ import annotations
 
+import re
+import zipfile
+from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
 import trimesh
 
 ROOT = Path(__file__).resolve().parents[1]
+PARTS = Path("/tmp/partof_parts_list_e.txt")
+ELEMS = Path("/home/ubuntu/.cursor/projects/workspace/agent-tools/6d17c02b-8f0d-440e-98f8-a570bbe72edf.txt")
+ZIP = Path("/tmp/bp3d/partof_BP3D_4.0_obj_99.zip")
 OBJ_DIR = Path("/tmp/bp3d/obj")
 OUT_GLB = ROOT / "public/atlas/vessels.glb"
 OUT_TS = ROOT / "src/atlas/generated/vesselCatalog.ts"
 OUT_LIC = ROOT / "public/atlas/LICENSE-BodyParts3D-vessels.txt"
 
-GROUPS = [
-    {
-        "id": "aorta",
-        "name": "Aorta",
-        "kind": "Great vessel · mesh",
-        "region": "Thoracic / upper abdominal axis",
-        "function": "Primary arterial trunk through the chest and upper abdomen in this figure.",
-        "relation": "Ascending aorta, arch, and descending run sit behind the sternum, left of the vena cava.",
-        "blurb": (
-            "Ascending aorta, arch, descending thoracic aorta, abdominal aorta, and the descending aorta element from BodyParts3D. "
-            "Intercostal and iliac branches are not in this leaf. Ruby shading is atlas styling, not a source color map."
-        ),
-        "fma": "FMA3734",
-        "slate": False,
-        "files": ["FJ1931", "FJ1932", "FJ3411", "FJ3413", "FJ3427"],
-    },
-    {
-        "id": "carotid-arteries",
-        "name": "Carotid arteries",
-        "kind": "Arterial · mesh",
-        "region": "Neck",
-        "function": "Left and right common carotid trunks beside the cervical column.",
-        "relation": "Rise from the arch and the brachiocephalic parent toward the skull base.",
-        "blurb": (
-            "Left and right common carotid trunks from BodyParts3D. The right file is also tagged brachiocephalic. "
-            "Internal carotids are not in this leaf. Left and right share one structure."
-        ),
-        "fma": "FMA3941",
-        "slate": False,
-        "files": ["FJ3564", "FJ3483"],
-    },
-    {
-        "id": "vena-cava",
-        "name": "Vena cava",
-        "kind": "Great vessel · mesh",
-        "region": "Right trunk",
-        "function": "Superior and inferior vena cava trunks on the right of the aorta.",
-        "relation": "The two caval trunks sit to the right of the aortic run. They are one card.",
-        "blurb": (
-            "Superior vena cava and inferior vena cava from BodyParts3D, one card. "
-            "These files do not include a joining cardiac segment or hepatic and renal inflows. "
-            "Slate shading is atlas styling, not a source color map."
-        ),
-        "fma": "FMA4720",
-        "slate": True,
-        "files": ["FJ3645", "FJ3441", "FJ3659"],
-    },
-    {
-        "id": "femoral-arteries",
-        "name": "Femoral arteries",
-        "kind": "Arterial · mesh",
-        "region": "Pelvis into the thighs",
-        "function": "Left and right femoral artery meshes, including the iliac parent tagged on each file.",
-        "relation": "Run medial to each femur, from the iliac parent the source tags on the file down the thigh.",
-        "blurb": (
-            "Left and right femoral artery meshes from BodyParts3D. Each file is also tagged as the common and external iliac parent, so that parent trunk is in the mesh. "
-            "Deep femoral, circumflex, and genicular arteries are not separate leaves here."
-        ),
-        "fma": "FMA70249",
-        "slate": False,
-        "files": ["FJ2143", "FJ2074"],
-    },
-    {
-        "id": "subclavian-arteries",
-        "name": "Subclavian arteries",
-        "kind": "Arterial · mesh",
-        "region": "Shoulder girdle",
-        "function": "Left and right subclavian trunks under the clavicles.",
-        "relation": "Short trunks from the arch and the brachiocephalic parent toward each clavicle.",
-        "blurb": (
-            "Left and right subclavian trunks from BodyParts3D. The right file is also tagged brachiocephalic. "
-            "Vertebral, internal thoracic, and arm arteries are not in this leaf."
-        ),
-        "fma": "FMA3953",
-        "slate": False,
-        "files": ["FJ3579", "FJ3479"],
-    },
-]
+INCLUDE = re.compile(
+    r"\b(artery|arteries|vein|veins|vena|venae|aorta)\b"
+    r"|pulmonary trunk|coronary sinus|cerebral arterial circle",
+    re.I,
+)
+EXCLUDE = re.compile(r"\b(system|tree|valve|nerve|lymph|bronchopulmonary)\b", re.I)
+
+
+def wanted(name: str) -> bool:
+    if EXCLUDE.search(name):
+        return False
+    return bool(INCLUDE.search(name))
+
+
+def is_vein(name: str) -> bool:
+    n = name.lower()
+    if "artery" in n or "arterial" in n or "aorta" in n or n == "pulmonary trunk":
+        return False
+    return "vein" in n or "vena" in n or "sinus" in n
+
+
+def slug(name: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+
+
+def region_for(name: str) -> str:
+    n = name.lower()
+    if any(k in n for k in ("carotid", "vertebral", "cerebral", "facial", "lingual", "ophthalm", "maxillary", "temporal", "occipital", "meningeal", "jugular", "thyroid", "cervical")):
+        return "Head and neck"
+    if any(k in n for k in ("femoral", "iliac", "tibial", "popliteal", "fibular", "peroneal", "plantar", "dorsal pedis", "genicular", "saphenous")):
+        return "Lower limb"
+    if any(k in n for k in ("subclavian", "axillary", "brachial", "radial", "ulnar", "humeral", "scapular", "thoracoacromial")):
+        return "Upper limb"
+    if any(k in n for k in ("hepatic", "portal", "renal", "mesenteric", "splenic", "gastric", "abdominal", "celiac", "colic", "jejunal", "ileal", "lumbar", "ovarian", "testicular", "suprarenal")):
+        return "Abdomen"
+    if any(k in n for k in ("coronary", "pulmonary", "aorta", "intercostal", "thoracic", "pericardi", "bronchial", "phrenic")):
+        return "Thorax"
+    return "Body"
 
 
 def bp3d_to_atlas(points: np.ndarray) -> np.ndarray:
     """mm, Z-up, +X left → meters, Y-up, +X right, +Z anterior."""
-    x, y, z = points[:, 0], points[:, 1], points[:, 2]
     out = np.empty_like(points, dtype=np.float64)
-    out[:, 0] = -x / 1000.0
-    out[:, 1] = z / 1000.0 + 0.08
-    out[:, 2] = -y / 1000.0
+    out[:, 0] = -points[:, 0] / 1000.0
+    out[:, 1] = points[:, 2] / 1000.0 + 0.08
+    out[:, 2] = -points[:, 1] / 1000.0
     return out
 
 
-def load_group(files: list[str]) -> trimesh.Trimesh:
-    meshes = []
-    for fj in files:
-        path = OBJ_DIR / f"{fj}.obj"
-        if not path.exists():
-            raise SystemExit(f"missing {path}")
-        text = path.read_text(errors="replace")
-        if "map_" in text or ".png" in text or ".jpg" in text:
-            raise SystemExit(f"{fj} references a texture map")
-        mesh = trimesh.load(path, force="mesh", process=False)
-        if not isinstance(mesh, trimesh.Trimesh):
-            raise SystemExit(f"{fj} did not load as a mesh")
-        mesh.vertices = bp3d_to_atlas(np.asarray(mesh.vertices, dtype=np.float64))
-        meshes.append(mesh)
-    merged = meshes[0] if len(meshes) == 1 else trimesh.util.concatenate(meshes)
-    merged.remove_unreferenced_vertices()
-    return merged
+def load_parts() -> dict[str, str]:
+    names = {}
+    for line in PARTS.read_text().splitlines()[1:]:
+        cols = line.split("\t")
+        if len(cols) < 3:
+            continue
+        names[cols[0]] = cols[2]
+    return names
+
+
+def load_elements() -> dict[str, list[str]]:
+    elem: dict[str, list[str]] = defaultdict(list)
+    for line in ELEMS.read_text().splitlines()[1:]:
+        bits = line.split()
+        if len(bits) < 3:
+            continue
+        elem[bits[0]].append(bits[-1])
+    return elem
+
+
+def assign_leaves(parts: dict[str, str], elem: dict[str, list[str]]) -> dict[str, list[str]]:
+    candidates = {fma: name for fma, name in parts.items() if wanted(name) and elem.get(fma)}
+    file_sets = {fma: set(elem[fma]) for fma in candidates}
+    owners: dict[str, list[str]] = defaultdict(list)
+    seen: set[str] = set()
+    for fma, files in file_sets.items():
+        seen.update(files)
+    for fj in sorted(seen):
+        owners_for = [fma for fma, files in file_sets.items() if fj in files]
+        if not owners_for:
+            continue
+        best = min(owners_for, key=lambda fma: (len(file_sets[fma]), -len(candidates[fma]), fma))
+        owners[best].append(fj)
+    return {fma: files for fma, files in owners.items() if files}
+
+
+def ensure_objs(files: set[str]) -> None:
+    OBJ_DIR.mkdir(parents=True, exist_ok=True)
+    missing = [fj for fj in files if not (OBJ_DIR / f"{fj}.obj").exists()]
+    if not missing:
+        return
+    if not ZIP.exists():
+        raise SystemExit(f"missing {ZIP}")
+    wanted_names = {f"partof_BP3D_4.0_obj_99/{fj}.obj": fj for fj in missing}
+    with zipfile.ZipFile(ZIP) as zf:
+        have = set(zf.namelist())
+        for name, fj in wanted_names.items():
+            if name not in have:
+                raise SystemExit(f"{fj} is not in the BodyParts3D zip")
+            (OBJ_DIR / f"{fj}.obj").write_bytes(zf.read(name))
+    print("extracted", len(missing), "obj files")
+
+
+def load_file(fj: str) -> trimesh.Trimesh:
+    path = OBJ_DIR / f"{fj}.obj"
+    text = path.read_text(errors="replace")
+    if "map_" in text or ".png" in text.lower() or ".jpg" in text.lower():
+        raise SystemExit(f"{fj} references a texture map")
+    mesh = trimesh.load(path, force="mesh", process=False)
+    if not isinstance(mesh, trimesh.Trimesh) or len(mesh.faces) < 1:
+        raise SystemExit(f"{fj} did not load as a mesh")
+    mesh.vertices = bp3d_to_atlas(np.asarray(mesh.vertices, dtype=np.float64))
+    return mesh
 
 
 def ts_escape(s: str) -> str:
     return s.replace("\\", "\\\\").replace("'", "\\'")
 
 
+def display_name(name: str) -> str:
+    return name[:1].upper() + name[1:]
+
+
 def main() -> None:
+    parts = load_parts()
+    elem = load_elements()
+    owned = assign_leaves(parts, elem)
+    files = {fj for group in owned.values() for fj in group}
+    print("leaves", len(owned), "files", len(files))
+    ensure_objs(files)
+
     scene = trimesh.Scene()
     rows = []
-    world = {}
-    for group in GROUPS:
-        mesh = load_group(group["files"])
-        if len(mesh.faces) < 8:
-            raise SystemExit(f"{group['id']} has no surface")
-        world[group["id"]] = mesh.copy()
-        centroid = np.asarray(mesh.centroid, dtype=np.float64).copy()
-        mesh.vertices = np.asarray(mesh.vertices, dtype=np.float64) - centroid
-        extent = mesh.extents
-        focus = float(np.clip(0.75 + np.linalg.norm(extent) * 0.55, 0.9, 1.4))
-        # Untextured. ColorVisuals carries no image map.
-        mesh.visual = trimesh.visual.ColorVisuals(mesh=mesh)
-        scene.add_geometry(mesh, geom_name=group["id"], node_name=group["id"])
-        rows.append({**group, "position": centroid, "focus": focus, "verts": int(len(mesh.vertices))})
-        print(
-            f"  {group['id']:22} c={np.round(centroid, 3)} "
-            f"span={np.round(extent, 3)} n={len(mesh.vertices)} focus={focus:.2f}"
+    used_ids: set[str] = set()
+    for fma in sorted(owned, key=lambda item: parts[item].lower()):
+        name = parts[fma]
+        meshes = [load_file(fj) for fj in owned[fma]]
+        merged = meshes[0] if len(meshes) == 1 else trimesh.util.concatenate(meshes)
+        merged.remove_unreferenced_vertices()
+        if len(merged.faces) < 4:
+            raise SystemExit(f"{name} has no surface")
+        centroid = np.asarray(merged.centroid, dtype=np.float64).copy()
+        merged.vertices = np.asarray(merged.vertices, dtype=np.float64) - centroid
+        extent = np.asarray(merged.extents, dtype=np.float64)
+        focus = float(np.clip(0.72 + np.linalg.norm(extent) * 0.55, 0.85, 1.4))
+        merged.visual = trimesh.visual.ColorVisuals(mesh=merged)
+        pid = slug(name)
+        if pid in used_ids:
+            pid = f"{pid}-{fma.lower()}"
+        used_ids.add(pid)
+        scene.add_geometry(merged, geom_name=pid, node_name=pid)
+        vein = is_vein(name)
+        label = display_name(name)
+        kind = "Venous · mesh" if vein else "Arterial · mesh"
+        tone = "blue" if vein else "red"
+        rows.append(
+            {
+                "id": pid,
+                "name": label,
+                "kind": kind,
+                "region": region_for(name),
+                "function": f"Named {name} mesh in the BodyParts3D kit.",
+                "relation": "Seated on this skeleton with the same transform as the bone meshes.",
+                "blurb": (
+                    f"{label} from BodyParts3D. Untextured mesh, seated on this skeleton. "
+                    f"Arteries are atlas red and veins are atlas blue."
+                ),
+                "position": centroid,
+                "focus": focus,
+                "fma": fma,
+                "vein": vein,
+                "tone": tone,
+            }
         )
 
-    aorta = world["aorta"]
-    cava = world["vena-cava"]
-    carotids = world["carotid-arteries"]
-    femorals = world["femoral-arteries"]
-    subclavians = world["subclavian-arteries"]
-    if not (1.15 < aorta.centroid[1] < 1.35 and 0.05 < aorta.centroid[2] < 0.16):
-        raise SystemExit(f"aorta is not seated in the chest: {aorta.centroid}")
-    if not (cava.centroid[0] > aorta.centroid[0]):
-        raise SystemExit("vena cava should sit to the anatomical right of the aorta")
-    if not (1.38 < carotids.centroid[1] < 1.50):
-        raise SystemExit(f"carotids are not in the neck: {carotids.centroid}")
-    if carotids.bounds[1, 1] > 1.52:
-        raise SystemExit("carotid files reach the skull; that would be an internal carotid we did not mean to take")
-    if not (0.55 < femorals.bounds[0, 1] < 0.7 and femorals.bounds[1, 1] > 0.85):
-        raise SystemExit(f"femoral span is unexpected: {femorals.bounds}")
-    if not (subclavians.bounds[1, 0] - subclavians.bounds[0, 0] > 0.12 and 1.35 < subclavians.centroid[1] < 1.48):
-        raise SystemExit(f"subclavians are not under the clavicles: {subclavians.bounds}")
+    if len(rows) < 40:
+        raise SystemExit(f"only {len(rows)} vessel leaves; the source has more")
+    if not any(row["id"] == "arch-of-aorta" for row in rows):
+        raise SystemExit("arch of aorta was not a leaf")
+    if not any(row["id"] == "superior-vena-cava" for row in rows):
+        raise SystemExit("superior vena cava was not a leaf")
+    if not any(row["vein"] for row in rows) or not any(not row["vein"] for row in rows):
+        raise SystemExit("need both arteries and veins")
+    arch = next(row for row in rows if row["id"] == "arch-of-aorta")
+    svc = next(row for row in rows if row["id"] == "superior-vena-cava")
+    if not (1.30 < arch["position"][1] < 1.45 and arch["position"][2] > 0.04):
+        raise SystemExit(f"arch is not in the chest: {arch['position']}")
+    if not (svc["position"][0] > arch["position"][0]):
+        raise SystemExit("superior vena cava should sit to the anatomical right of the arch")
 
     OUT_GLB.parent.mkdir(parents=True, exist_ok=True)
     scene.export(OUT_GLB)
     raw = OUT_GLB.read_bytes()
     if raw[:4] != b"glTF":
         raise SystemExit("export is not a GLB")
-    # JSON chunk must not reference images.
     length = int.from_bytes(raw[12:16], "little")
     js = raw[20 : 20 + length]
     if b'"images"' in js or b"image/" in js:
         raise SystemExit("vessels.glb contains an image map")
-    print("wrote", OUT_GLB, "bytes", OUT_GLB.stat().st_size)
+    print("wrote", OUT_GLB, "bytes", OUT_GLB.stat().st_size, "leaves", len(rows))
 
     lines = []
+    vein_ids = []
     for row in rows:
         x, y, z = row["position"]
+        if row["vein"]:
+            vein_ids.append(row["id"])
         lines.append(
             "  {\n"
             f"    id: '{row['id']}',\n"
@@ -218,19 +254,22 @@ def main() -> None:
             f"    fma: '{row['fma']}',\n"
             "  }"
         )
-    OUT_TS.parent.mkdir(parents=True, exist_ok=True)
+    vein_body = ",\n".join(f"  '{vid}'" for vid in vein_ids)
     OUT_TS.write_text(
         "import type { Structure } from '../types'\n\n"
-        "/** BodyParts3D 4.0 PART-OF trunks in public/atlas/vessels.glb. Untextured. Do not edit by hand. */\n"
+        "/** BodyParts3D 4.0 PART-OF arteries and veins in public/atlas/vessels.glb. Untextured. Do not edit by hand. */\n"
         "export const VESSEL_MESH_PARTS = [\n"
         + ",\n".join(lines)
         + "\n] as const satisfies readonly Structure[]\n\n"
-        "export const VESSEL_SLATE_IDS = ['vena-cava'] as const\n"
+        f"export const VESSEL_MESH_COUNT = {len(rows)}\n\n"
+        "export const VESSEL_VEIN_IDS = [\n"
+        + vein_body
+        + "\n] as const\n"
     )
-    print("wrote", OUT_TS)
+    print("wrote", OUT_TS, "veins", len(vein_ids), "arteries", len(rows) - len(vein_ids))
 
     OUT_LIC.write_text(
-        "BodyParts3D vessel trunks (aorta, common carotids, venae cavae, femorals, subclavians)\n"
+        "BodyParts3D artery and vein meshes\n"
         "\n"
         "Source models: BodyParts3D — The Database Center for Life Science (DBCLS)\n"
         "Release: 4.0 PART-OF tree, polygon reduction 99%, untextured OBJ\n"
@@ -245,10 +284,9 @@ def main() -> None:
         "\n"
         "This GLB uses the same meter, Y-up, +X anatomical-right seating as skeleton.glb.\n"
         "No texture maps are included. Non-commercial color maps from other kits are not packed.\n"
-        "Only the five trunk groups listed in scripts/build-vessels-glb.py are included.\n"
-        "Share-alike: this derived GLB must stay under a compatible CC BY-SA license.\n"
+        "Each polygon file is one leaf: the most specific artery or vein name the source gives it.\n"
+        "Nerves are not included. Share-alike: this derived GLB stays CC BY-SA.\n"
     )
-    print("wrote", OUT_LIC)
 
 
 if __name__ == "__main__":

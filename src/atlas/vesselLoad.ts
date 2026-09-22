@@ -3,7 +3,7 @@ import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { Mesh } from 'three'
 
 export const VESSEL_URL = '/atlas/vessels.glb'
-export const VESSEL_BYTES = 326_336
+export const VESSEL_BYTES = 14_185_620
 
 function parseGlb(buffer: ArrayBuffer): Promise<GLTF> {
   const loader = new GLTFLoader()

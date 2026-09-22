@@ -1,4 +1,4 @@
-BodyParts3D vessel trunks (aorta, common carotids, venae cavae, femorals, subclavians)
+BodyParts3D artery and vein meshes
 
 Source models: BodyParts3D — The Database Center for Life Science (DBCLS)
 Release: 4.0 PART-OF tree, polygon reduction 99%, untextured OBJ
@@ -13,5 +13,5 @@ Required attribution:
 
 This GLB uses the same meter, Y-up, +X anatomical-right seating as skeleton.glb.
 No texture maps are included. Non-commercial color maps from other kits are not packed.
-Only the five trunk groups listed in scripts/build-vessels-glb.py are included.
-Share-alike: this derived GLB must stay under a compatible CC BY-SA license.
+Each polygon file is one leaf: the most specific artery or vein name the source gives it.
+Nerves are not included. Share-alike: this derived GLB stays CC BY-SA.

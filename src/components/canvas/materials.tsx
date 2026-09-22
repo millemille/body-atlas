@@ -23,15 +23,7 @@ export function SystemMaterial({
   const stash = (m: { userData: Record<string, number> }) => {
     m.userData.baseOpacity = baseOpacity
     m.userData.baseEmissive =
-      kind === 'nerve'
-        ? 0.07
-        : kind === 'vessel-core'
-          ? 0.22
-          : kind === 'vessel'
-            ? slate
-              ? 0.02
-              : 0.05
-            : 0.012
+      kind === 'nerve' ? 0.07 : kind === 'vessel-core' ? 0.22 : 0.012
   }
 
   if (kind === 'skeleton') {
@@ -110,26 +102,23 @@ export function SystemMaterial({
 
   if (kind === 'vessel') {
     const tint = slate ? SABRINA.vesselVein : SABRINA.vesselRuby
+    const glow = slate ? 0.42 : 0.38
     return (
-      <meshPhysicalMaterial
+      <meshStandardMaterial
         color={tint}
-        roughness={0.12}
+        roughness={0.42}
         metalness={0}
-        transmission={0.18}
-        thickness={0.12}
-        attenuationColor={slate ? '#8A9BB8' : '#C45A62'}
-        attenuationDistance={2}
-        ior={1.48}
-        clearcoat={0.78}
-        clearcoatRoughness={0.16}
-        specularIntensity={0.62}
         emissive={tint}
-        emissiveIntensity={slate ? 0.02 : 0.06}
-        envMapIntensity={0.35}
+        emissiveIntensity={glow}
+        envMapIntensity={0.15}
         transparent
         opacity={baseOpacity}
-        depthWrite={false}
-        onUpdate={stash}
+        depthWrite
+        toneMapped={false}
+        onUpdate={(m) => {
+          m.userData.baseOpacity = baseOpacity
+          m.userData.baseEmissive = glow
+        }}
       />
     )
   }

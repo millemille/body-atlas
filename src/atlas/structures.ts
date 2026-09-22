@@ -100,7 +100,7 @@ const INTERIM_PARTS: Structure[] = [
     function: 'Heart-shaped landmark in the left chest.',
     relation: 'Sits inside the rib meshes, left of the venous column.',
     blurb:
-      'A viscera-toned wedge in the left chest. Chambers are omitted. The aorta mesh can sit beside it when Vessel is the second hot system.',
+      'A viscera-toned wedge in the left chest. Chambers are omitted. An aortic mesh can sit beside it when Vessel is the second hot system.',
     position: L.heart,
     focusDistance: 1.05,
   }),

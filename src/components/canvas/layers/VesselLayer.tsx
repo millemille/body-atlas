@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Group, Mesh, type BufferGeometry } from 'three'
-import { VESSEL_MESH_PARTS, VESSEL_SLATE_IDS } from '@/atlas/generated/vesselCatalog'
+import { useAtlas } from '@/atlas/AtlasProvider'
+import { VESSEL_MESH_PARTS, VESSEL_VEIN_IDS } from '@/atlas/generated/vesselCatalog'
 import { fetchVesselGltf, peekCachedVessels } from '@/atlas/vesselLoad'
 import { AtlasMesh } from '../AtlasMesh'
 import { SystemMaterial } from '../materials'
 import { StructureGroup } from '../StructureGroup'
 
-const SLATE = new Set<string>(VESSEL_SLATE_IDS)
+const VEINS = new Set<string>(VESSEL_VEIN_IDS)
 
 function geometriesById(root: Group): Map<string, BufferGeometry> {
   const map = new Map<string, BufferGeometry>()
@@ -19,10 +20,12 @@ function geometriesById(root: Group): Map<string, BufferGeometry> {
 }
 
 /**
- * Live Vessel path: BodyParts3D trunks from vessels.glb.
- * Cold systems stay unpickable in StructureGroup, so Muscle remains first-hit until Vessel is hot.
+ * Live Vessel path: BodyParts3D arteries and veins from vessels.glb.
+ * The layer stays unmounted until Vessel is hot, so Muscle remains first-hit.
  */
 export function VesselLayer() {
+  const { hotSystems } = useAtlas()
+  const vesselHot = hotSystems.includes('vessel')
   const [scene, setScene] = useState<Group | null>(() => peekCachedVessels())
 
   useEffect(() => {
@@ -53,7 +56,7 @@ export function VesselLayer() {
     })
   }, [scene])
 
-  if (!scene) return null
+  if (!scene || !vesselHot) return null
 
   return (
     <group name="vessel-mesh-layer">
@@ -61,7 +64,7 @@ export function VesselLayer() {
         <StructureGroup key={part.id} id={part.id}>
           <AtlasMesh position={part.position} castShadow={false} receiveShadow={false}>
             <primitive object={geometry} attach="geometry" />
-            <SystemMaterial kind="vessel" slate={SLATE.has(part.id)} />
+            <SystemMaterial kind="vessel" slate={VEINS.has(part.id)} />
           </AtlasMesh>
         </StructureGroup>
       ))}
