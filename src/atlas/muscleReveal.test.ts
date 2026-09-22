@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { LIVE_MUSCLE_IDS } from './muscleCopy'
 import { STRUCTURES } from './structures'
@@ -17,7 +18,6 @@ import {
   SKELETON_DPR_CAP,
   WAVE_IDLE_FRAMES,
   allWaveIds,
-  filterStructuresForM2Coverage,
   idsThroughWaves,
   idsThroughWave,
   isM2MuscleId,
@@ -63,18 +63,20 @@ test('M2 groups are not in the M1 paint set', () => {
   assert.equal(M2_IDS.length, 5)
 })
 
-test('M2 coverage off hides cuff / erectors / adductors from the catalog', () => {
-  const hot = STRUCTURES.filter((s) => s.system === 'muscle')
-  const gated = filterStructuresForM2Coverage(hot, false)
-  const open = filterStructuresForM2Coverage(hot, true)
+test('chrome has no muscle coverage control', () => {
+  const bar = readFileSync(new URL('../components/chrome/SystemsBar.tsx', import.meta.url), 'utf8')
+  const rail = readFileSync(new URL('../components/chrome/StructuresRail.tsx', import.meta.url), 'utf8')
+  assert.equal(bar.includes('data-atlas-m2'), false)
+  assert.equal(bar.includes('More coverage'), false)
+  assert.equal(rail.includes('More coverage'), false)
+})
+
+test('every kit muscle stays in the catalog, including cuff and erectors', () => {
+  const muscles = STRUCTURES.filter((s) => s.system === 'muscle')
   for (const id of M2_IDS) {
     assert.equal(isM2MuscleId(id), true)
-    assert.equal(gated.some((s) => s.id === id), false, id)
-    assert.equal(open.some((s) => s.id === id), true, id)
+    assert.equal(muscles.some((s) => s.id === id), true, id)
   }
-  assert.ok(gated.some((s) => s.id === 'pectoralis'))
-  assert.ok(gated.length < open.length)
-  assert.ok(open.findIndex((s) => s.id === 'rotator-cuff') < open.findIndex((s) => s.id === 'pectoralis'))
-  assert.ok(open.findIndex((s) => s.id === 'erector-spinae') < open.findIndex((s) => s.id === 'pectoralis'))
-  assert.ok(open.findIndex((s) => s.id === 'hip-adductors') < open.findIndex((s) => s.id === 'pectoralis'))
+  assert.ok(muscles.some((s) => s.id === 'pectoralis'))
+  assert.ok(muscles.some((s) => s.id === 'trapezius'))
 })

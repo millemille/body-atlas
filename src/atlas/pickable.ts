@@ -1,4 +1,3 @@
-import { isM2MuscleId } from './muscleReveal'
 import { getStructure } from './structures'
 import type { SystemId } from './types'
 
@@ -39,13 +38,4 @@ export function dropSelectionIfCold(
   const part = getStructure(selectedId)
   if (part && !hot.includes(part.system)) return null
   return selectedId
-}
-
-/** Drop a cuff / erector / adductor pick when More coverage (M2) is off. */
-export function dropSelectionIfCoverageOff(
-  m2Coverage: boolean,
-  selectedId: string | null,
-): string | null {
-  if (!selectedId || m2Coverage) return selectedId
-  return isM2MuscleId(selectedId) ? null : selectedId
 }

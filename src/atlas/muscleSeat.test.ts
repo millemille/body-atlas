@@ -35,11 +35,11 @@ function localZ(root: Mesh['parent'], name: string) {
   return { min: box.min.z, max: box.max.z }
 }
 
-const BLADE_X_MIN = 0.05
-const BLADE_X_MAX = 0.14
-const BLADE_Y_MIN = 1.18
-const BLADE_Y_MAX = 1.52
-const BLADE_Z_MAX = 0.08
+const SCAPULA_X_MIN = 0.05
+const SCAPULA_X_MAX = 0.14
+const SCAPULA_Y_MIN = 1.18
+const SCAPULA_Y_MAX = 1.52
+const SCAPULA_Z_MAX = 0.08
 
 function worldCentroids(root: Mesh['parent'], name: string, origin: readonly [number, number, number]) {
   const mesh = namedMesh(root, name)
@@ -117,25 +117,27 @@ test('Open3D kit seats pecs and abs on the anterior wall and keeps the back on t
   const absDeep = absPart.position[2] + abs.min
   assert.ok(latFace < absDeep, `latissimus face ${latFace} is in front of rectus ${absDeep}`)
 
-  let bladeLeft = 0
+  let scapulaRight = 0
+  let scapulaLeft = 0
   let cuffLateral = 0
   for (const part of MUSCLE_MESH_PARTS) {
     const cents = worldCentroids(muscles.scene, part.id, part.position)
     for (const c of cents) {
       const ax = Math.abs(c.x)
-      // Catalog positions are rounded to 1e-5, so the rebuilt window needs a hair of slack.
       if (
-        ax >= BLADE_X_MIN + 1e-4 &&
-        ax <= BLADE_X_MAX - 1e-4 &&
-        c.y >= BLADE_Y_MIN + 1e-4 &&
-        c.y <= BLADE_Y_MAX - 1e-4 &&
-        c.z < BLADE_Z_MAX - 1e-4
+        ax >= SCAPULA_X_MIN &&
+        ax <= SCAPULA_X_MAX &&
+        c.y >= SCAPULA_Y_MIN &&
+        c.y <= SCAPULA_Y_MAX &&
+        c.z < SCAPULA_Z_MAX
       ) {
-        bladeLeft += 1
+        if (c.x > 0) scapulaRight += 1
+        else scapulaLeft += 1
       }
       if (part.id === 'rotator-cuff' && ax > 0.16) cuffLateral += 1
     }
   }
-  assert.equal(bladeLeft, 0, `blade window still holds ${bladeLeft} triangles`)
+  assert.ok(scapulaRight > 20, `right scapula cover ${scapulaRight}`)
+  assert.ok(scapulaLeft > 20, `left scapula cover ${scapulaLeft}`)
   assert.ok(cuffLateral > 100, `lateral cuff triangles ${cuffLateral}`)
 })

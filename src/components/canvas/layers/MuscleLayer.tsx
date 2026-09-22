@@ -22,7 +22,7 @@ function geometriesById(root: Group): Map<string, BufferGeometry> {
  * Procedural gels stay parked — they are not mounted.
  */
 export function MuscleLayer() {
-  const { hotSystems, enableM2Coverage } = useAtlas()
+  const { hotSystems } = useAtlas()
   const [scene, setScene] = useState<Group | null>(() => peekCachedMuscles())
   const muscleHot = hotSystems.includes('muscle')
   const wasHot = useRef(muscleHot)
@@ -37,7 +37,6 @@ export function MuscleLayer() {
     const cached = peekCachedMuscles()
     if (cached) {
       setScene(cached)
-      enableM2Coverage()
       return
     }
     let dead = false
@@ -45,7 +44,6 @@ export function MuscleLayer() {
       .then((next) => {
         if (dead) return
         setScene(next)
-        enableM2Coverage()
       })
       .catch(() => {
         /* MuscleLayer stays empty; skeleton remains pickable */
@@ -53,7 +51,7 @@ export function MuscleLayer() {
     return () => {
       dead = true
     }
-  }, [enableM2Coverage])
+  }, [])
 
   const mounted = useMemo(() => {
     if (!scene) return []

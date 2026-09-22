@@ -12,9 +12,9 @@ xiphoid wall — the L5 vertebral body is not the belly surface. Obliques lose
 the midline aponeurosis so they stay lateral. Posterior leaves shift only when
 they float behind the skeleton.
 
-Every leaf then drops triangles in the mid-scapular blade (BLADE_X_MAX). The
-existing trapezius peak is seated on the superior nuchal line. Does not invent
-SCM, face, or deep-neck leaves the kit does not ship.
+The existing trapezius peak is seated on the superior nuchal line. Upper-back
+leaves keep their triangles over both scapulae. Does not invent SCM, face, or
+deep-neck leaves the kit does not ship.
 """
 
 from __future__ import annotations
@@ -42,12 +42,6 @@ OUT_LIC = ROOT / "public/atlas/LICENSE-Open3D.txt"
 
 PLATE = 0.01
 MAX_POSTERIOR_SHIFT = 0.04
-# Mid-fossa only. 0.22 ate the lateral cuff (UAT-06). Kept on every leaf.
-BLADE_X_MIN = 0.05
-BLADE_X_MAX = 0.14
-BLADE_Y_MIN = 1.18
-BLADE_Y_MAX = 1.52
-BLADE_Z_MAX = 0.08
 # Rectus spans about ±0.08. Inside this, the front midline stays rectus.
 OBLIQUE_MEDIAL_X = 0.07
 LATERAL_ABDOMEN = {"external-oblique", "internal-oblique", "transversus-abdominis"}
@@ -681,24 +675,6 @@ def keep_lateral(mesh: trimesh.Trimesh, medial_x: float) -> float:
     return float(drop.mean())
 
 
-def drop_scapular_blade(mesh: trimesh.Trimesh) -> float:
-    """Drop mid-blade triangles on every leaf. Lateral cuff (|x| > BLADE_X_MAX) stays."""
-    centroids = mesh.triangles_center
-    ax = np.abs(centroids[:, 0])
-    drop = (
-        (ax >= BLADE_X_MIN)
-        & (ax <= BLADE_X_MAX)
-        & (centroids[:, 1] >= BLADE_Y_MIN)
-        & (centroids[:, 1] <= BLADE_Y_MAX)
-        & (centroids[:, 2] < BLADE_Z_MAX)
-    )
-    if not np.any(drop):
-        return 0.0
-    mesh.update_faces(~drop)
-    mesh.remove_unreferenced_vertices()
-    return float(drop.mean())
-
-
 def front_hit(mesh: trimesh.Trimesh, x: float, y: float) -> float | None:
     """Highest Z where a -Z ray through (x, y) meets this mesh."""
     tri = mesh.triangles
@@ -972,9 +948,6 @@ def main() -> None:
         if leaf_id in LATERAL_ABDOMEN:
             dropped = keep_lateral(merged, OBLIQUE_MEDIAL_X)
             print(f"  lateral {leaf_id} drop={dropped:.1%}")
-        blade = drop_scapular_blade(merged)
-        if blade:
-            print(f"  blade {leaf_id} drop={blade:.1%}")
         if len(merged.faces) < 8:
             raise SystemExit(f"{leaf_id} lost its surface ({len(merged.faces)} faces)")
         world_meshes[leaf_id] = merged.copy()
@@ -1043,15 +1016,22 @@ def main() -> None:
                 best = (leaf_id, z)
         return best
 
-    for x, y in ((0.10, 1.36), (-0.10, 1.36), (0.12, 1.40)):
-        blocked = back_owner(x, y)
-        print(f"  mid blade x={x:.2f} y={y:.2f} {blocked}")
-        if blocked and blocked[1] < BLADE_Z_MAX:
-            raise SystemExit(f"mid blade x={x:.2f} y={y:.2f} still has {blocked[0]} at z={blocked[1]:.3f}")
-    lateral = back_owner(0.16, 1.345)
-    print(f"  lateral cuff {lateral}")
-    if lateral is None or lateral[0] != "rotator-cuff":
-        raise SystemExit(f"lateral cuff ray is {lateral}, want rotator-cuff")
+    for x, y in (
+        (0.10, 1.36),
+        (-0.10, 1.36),
+        (0.12, 1.40),
+        (-0.12, 1.40),
+        (0.08, 1.28),
+        (-0.08, 1.28),
+        (0.0, 1.36),
+        (0.04, 1.32),
+        (-0.04, 1.32),
+        (0.0, 1.42),
+    ):
+        covered = back_owner(x, y)
+        print(f"  upper back x={x:.2f} y={y:.2f} {covered}")
+        if covered is None:
+            raise SystemExit(f"upper back x={x:.2f} y={y:.2f} has no muscle")
     if any(row["id"] == "sternocleidomastoid" for row in rows):
         raise SystemExit("SCM was invented")
 

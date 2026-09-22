@@ -1,7 +1,6 @@
 import { ChevronRight, Search } from 'lucide-react'
 import { useState } from 'react'
 import { useAtlas } from '@/atlas/AtlasProvider'
-import { isM2MuscleId } from '@/atlas/muscleReveal'
 import { noteChromeInteract } from '@/atlas/pointerSession'
 import { SYSTEMS } from '@/atlas/systems'
 import { Input } from '@/components/ui/input'
@@ -224,33 +223,14 @@ function MuscleRailItems({
   selectedId: string | null
   onSelect: (id: string) => void
 }) {
-  const extra = items.filter((p) => isM2MuscleId(p.id))
-  const core = items.filter((p) => !isM2MuscleId(p.id))
   const showRegions = !query.trim()
   return (
-    <>
-      {extra.length > 0 ? (
-        <li>
-          <p className="px-2 pt-2 pb-0.5 text-[10px] tracking-[0.14em] text-[#3AD1C7]/80">
-            More coverage
-          </p>
-          <ul className="flex flex-col gap-0.5">
-            <RegionRows
-              items={extra}
-              showRegions={showRegions}
-              selectedId={selectedId}
-              onSelect={onSelect}
-            />
-          </ul>
-        </li>
-      ) : null}
-      <RegionRows
-        items={core}
-        showRegions={showRegions}
-        selectedId={selectedId}
-        onSelect={onSelect}
-      />
-    </>
+    <RegionRows
+      items={items}
+      showRegions={showRegions}
+      selectedId={selectedId}
+      onSelect={onSelect}
+    />
   )
 }
 

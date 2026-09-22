@@ -19,7 +19,7 @@ export const M1_WAVES = [
   ...KIT_EXTRA_WAVES,
 ] as const
 
-/** Mounted only after the chrome “More coverage (M2)” toggle — never on Muscle ON. */
+/** Later mount waves. They are part of the kit, not a coverage toggle. */
 export const M2_WAVES = [
   ['rotator-cuff'],
   ['erector-spinae'],
@@ -47,25 +47,13 @@ export const WAVE_IDLE_FRAMES = 12
 export const M1_HOLD_FRAMES = 24
 /** Idle frames between M2 waves — slower than M1. */
 export const M2_IDLE_FRAMES = 24
-/** Extra frames after M1 complete before auto More coverage. First click stays M1. */
+/** Extra frames after M1 complete before the later waves. */
 export const M2_SETTLE_FRAMES = 240
 /** Frames after M2 layer mounts before cuff. */
 export const M2_HOLD_FRAMES = 20
 
 export function isM2MuscleId(id: string): boolean {
   return M2_ID_SET.has(id)
-}
-
-export function filterStructuresForM2Coverage<T extends { id: string; system: string }>(
-  list: readonly T[],
-  m2Coverage: boolean,
-): T[] {
-  if (!m2Coverage) {
-    return list.filter((s) => s.system !== 'muscle' || !M2_ID_SET.has(s.id))
-  }
-  const extra = list.filter((s) => M2_ID_SET.has(s.id))
-  const rest = list.filter((s) => !M2_ID_SET.has(s.id))
-  return [...extra, ...rest]
 }
 
 export function idsThroughWaves(waves: readonly (readonly string[])[], wave: number): Set<string> {
