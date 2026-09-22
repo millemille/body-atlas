@@ -122,7 +122,9 @@ export function FocusRig({
 }) {
   const { selected, viewMode, viewEpoch, focusNonce, jumpRegionId } = useAtlas()
   const camera = useThree((s) => s.camera) as PerspectiveCamera
+  const gl = useThree((s) => s.gl)
   const booted = useRef(false)
+  const held = useRef<Pose | null>(null)
   const lastEpoch = useRef(viewEpoch)
   const explore = useRef<Pose | null>(null)
   const anim = useRef<LeanAnim | null>(null)
@@ -135,6 +137,19 @@ export function FocusRig({
   viewModeRef.current = viewMode
   selectedRef.current = selected
   jumpRegionIdRef.current = jumpRegionId
+
+  useEffect(() => {
+    const el = gl.domElement
+    const release = () => {
+      held.current = null
+    }
+    el.addEventListener('pointerdown', release)
+    el.addEventListener('wheel', release, { passive: true })
+    return () => {
+      el.removeEventListener('pointerdown', release)
+      el.removeEventListener('wheel', release)
+    }
+  }, [gl])
 
   useEffect(() => {
     let cancelled = false
@@ -177,6 +192,7 @@ export function FocusRig({
       wasFocus.current = viewMode === 'focus'
 
       if (viewMode === 'focus' && jumpRegionId) {
+        held.current = null
         const regionFrame = regionFrameFor(jumpRegionId, selected)
         if (regionFrame) {
           leanDelay.current = 0
@@ -199,6 +215,7 @@ export function FocusRig({
       c.enabled = true
 
       if (viewMode === 'focus' && selected) {
+        held.current = null
         anim.current = null
         leanDelay.current = 0
         pendingLean.current = null
@@ -208,7 +225,31 @@ export function FocusRig({
 
       if (viewMode !== 'default') return
 
+      const freezeCamera = () => {
+        const pose = readPose(c, camera)
+        explore.current = null
+        anim.current = null
+        leanDelay.current = 0
+        pendingLean.current = null
+        c.enableDamping = true
+        c.minDistance = FOCUS_MIN_DISTANCE
+        c.maxDistance = SAFE_ORBIT_MAX
+        c.setScale?.(1)
+        if (c.scale !== undefined) c.scale = 1
+        c.sphericalDelta?.set(0, 0, 0)
+        c.panOffset?.set(0, 0, 0)
+        c.update()
+        camera.position.copy(pose.pos)
+        c.object.position.copy(pose.pos)
+        c.target.copy(pose.target)
+        camera.lookAt(pose.target)
+        c.update()
+        held.current = pose
+        c.saveState()
+      }
+
       if (epochChanged) {
+        held.current = null
         snapHome(c, camera)
         try {
           c.reset()
@@ -222,25 +263,15 @@ export function FocusRig({
         return
       }
 
-      // Closing Focus keeps the dolly. Reset (viewEpoch) is what returns home.
-      if (leavingFocus) {
-        explore.current = null
-        anim.current = null
-        leanDelay.current = 0
-        pendingLean.current = null
-        c.enableDamping = true
-        c.minDistance = FOCUS_MIN_DISTANCE
-        c.maxDistance = SAFE_ORBIT_MAX
-        if (c.scale !== undefined) c.scale = 1
-        c.sphericalDelta?.set(0, 0, 0)
-        c.panOffset?.set(0, 0, 0)
-        c.update()
-        c.saveState()
+      // Card close and leaving Focus keep the current camera. Reset is the home snap.
+      if (leavingFocus || !selected) {
+        freezeCamera()
         return
       }
 
       const now = readPose(c, camera)
       if (selected) {
+        held.current = null
         if (!explore.current) explore.current = now
         const stash = explore.current
         const lean = selectLean(selected, stash.pos, stash.target)
@@ -251,14 +282,6 @@ export function FocusRig({
           return
         }
         startLean(c, now, dest)
-        return
-      }
-
-      if (explore.current) {
-        leanDelay.current = 0
-        pendingLean.current = null
-        startLean(c, now, explore.current)
-        explore.current = null
       }
     }
 
@@ -277,6 +300,18 @@ export function FocusRig({
     const mode = viewModeRef.current
     const part = selectedRef.current
     const jumpId = jumpRegionIdRef.current
+
+    if (held.current && mode !== 'focus') {
+      anim.current = null
+      leanDelay.current = 0
+      pendingLean.current = null
+      camera.position.copy(held.current.pos)
+      c.target.copy(held.current.target)
+      camera.lookAt(held.current.target)
+      c.sphericalDelta?.set(0, 0, 0)
+      c.panOffset?.set(0, 0, 0)
+      return
+    }
 
     if (mode === 'focus' && jumpId) {
       leanDelay.current = 0

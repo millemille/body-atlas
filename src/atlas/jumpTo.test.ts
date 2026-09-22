@@ -116,6 +116,7 @@ test('closing Focus keeps the camera instead of snapping home', () => {
   assert.equal(toggle.includes('setViewEpoch'), false)
   assert.equal(reset.includes('setViewEpoch'), true)
   assert.match(rig, /leavingFocus/)
+  assert.equal(rig.includes('startLean(c, now, explore.current)'), false)
   assert.equal(rig.includes('}, 1)'), false)
 })
 
