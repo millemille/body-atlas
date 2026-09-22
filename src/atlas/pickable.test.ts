@@ -19,10 +19,11 @@ test('default hot set is skeleton so the mesh kit is the first silhouette', () =
   assert.deepEqual(next, ['skeleton', 'muscle'])
 })
 
-test('max-two replace drops the oldest system, not a silent leftover', () => {
-  const next = toggleHotSystems(['skeleton', 'muscle'], 'nerve')
-  assert.deepEqual(next, ['muscle', 'nerve'])
-  assert.equal(next.includes('skeleton'), false)
+test('turning another system on keeps the ones already hot', () => {
+  const next = toggleHotSystems(['muscle', 'vessel'], 'skeleton')
+  assert.deepEqual(next, ['muscle', 'vessel', 'skeleton'])
+  const all = toggleHotSystems(toggleHotSystems(next, 'nerve'), 'other')
+  assert.deepEqual(all, ['muscle', 'vessel', 'skeleton', 'nerve', 'other'])
 })
 
 test('orphan isolate does not freeze hot bones', () => {
