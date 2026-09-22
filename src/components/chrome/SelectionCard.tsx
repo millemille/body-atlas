@@ -49,7 +49,7 @@ export function SelectionCard({
       draggable={false}
       onDragStart={(e) => e.preventDefault()}
       className={cn(
-        'glass-card relative z-20 w-[296px] max-w-[320px] origin-top-left select-none rounded-xl px-5 py-4 [&_*]:select-none',
+        'glass-card relative z-20 flex max-h-full min-h-0 w-[296px] max-w-[320px] origin-top-left flex-col overflow-hidden select-none rounded-xl px-5 py-4 [&_*]:select-none',
         'transition-[opacity,transform] duration-200 ease-out scale-100 opacity-100',
         mobile && 'mx-4 mb-1 w-auto max-w-lg origin-bottom',
         className,
@@ -62,7 +62,8 @@ export function SelectionCard({
     >
       <div
         className={cn(
-          mobile ? 'max-h-[42vh] overflow-y-auto pr-1' : 'max-h-[min(56vh,26rem)] overflow-y-auto pr-1',
+          'min-h-0 flex-1 overflow-y-auto pr-1',
+          mobile && 'max-h-[42vh]',
         )}
       >
         <h2 className="font-display text-[1.55rem] leading-none tracking-tight text-ink">
@@ -84,7 +85,7 @@ export function SelectionCard({
         <p className="mt-3 text-[13px] leading-relaxed text-ink/80">{selected.blurb}</p>
         <p className="mt-3 text-[10px] leading-relaxed text-muted-ink/75">{FOOTNOTE}</p>
       </div>
-      <footer className="relative z-30 mt-3 flex flex-wrap items-center gap-2" style={{ pointerEvents: 'auto' }}>
+      <footer className="relative z-30 mt-3 flex shrink-0 flex-wrap items-center gap-2" style={{ pointerEvents: 'auto' }}>
         <button
           type="button"
           data-atlas-focus="card"

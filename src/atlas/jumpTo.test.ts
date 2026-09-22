@@ -118,6 +118,11 @@ test('closing Focus keeps the camera instead of snapping home', () => {
   assert.match(rig, /leavingFocus/)
   assert.equal(rig.includes('startLean(c, now, explore.current)'), false)
   assert.equal(rig.includes('}, 1)'), false)
+  const capture = readFileSync(join(srcRoot, '../public/atlas-dock-capture.js'), 'utf8')
+  assert.equal(capture.includes("if (x < r.left) return 'reset'"), false)
+  assert.match(capture, /inCardPanel/)
+  assert.match(capture, /cardCloseButton/)
+  assert.match(capture, /pointInRect\(x, y, r, 10\)/)
 })
 
 test('region ease is an outside arc that still lands on the region frame', () => {

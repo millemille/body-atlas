@@ -171,6 +171,16 @@
     return !!(r && pointInRect(x, y, r, 4))
   }
 
+  function cardCloseButton(x, y) {
+    flushReflow()
+    var nodes = document.querySelectorAll('[data-atlas-close="card"]')
+    for (var i = 0; i < nodes.length; i++) {
+      var r = nodes[i].getBoundingClientRect()
+      if (r.width >= 2 && r.height >= 2 && pointInRect(x, y, r, 6)) return nodes[i]
+    }
+    return null
+  }
+
   function fromCardFocusNode(e) {
     var t = e.target
     if (t && t.closest) {
@@ -199,18 +209,14 @@
     dock.style.outlineOffset = '2px'
   }
 
-  /** X thirds of the toolbar pill (not the full window). */
-  function toolNameAt(x) {
+  /** Thirds of the toolbar pill only. The dock band left of the pill is not Reset. */
+  function toolNameAt(x, y) {
     flushReflow()
-    var r = dockRect()
     var bar = document.querySelector('[data-atlas-toolbar]')
-    if (bar) {
-      var br = bar.getBoundingClientRect()
-      if (br.width > 8) r = br
-    }
-    if (r.width < 8) return 'focus'
-    if (x < r.left) return 'reset'
-    if (x > r.right) return 'isolate'
+    if (!bar) return null
+    var r = bar.getBoundingClientRect()
+    if (r.width < 8 || r.height < 8) return null
+    if (!pointInRect(x, y, r, 10)) return null
     var t = (x - r.left) / r.width
     if (t < 1 / 3) return 'reset'
     if (t < 2 / 3) return 'focus'
@@ -260,11 +266,6 @@
     return null
   }
 
-  function mapX(x, y) {
-    if (inDockGeom(x, y)) return x
-    return lastMoveX
-  }
-
   function onPointer(e) {
     if (typeof e.clientX !== 'number' || typeof e.clientY !== 'number') return
     var x = e.clientX
@@ -306,9 +307,19 @@
 
     if (e.type !== 'pointerdown') return
 
+    if (inCardPanel(x, y)) {
+      window.__atlasLastPointer = Math.round(x) + ',' + Math.round(y) + ' → hit=card'
+      paintHud()
+      releaseEveryCapture(e.pointerId)
+      setCanvasLive(false)
+      var closeBtn = cardCloseButton(x, y)
+      if (closeBtn) closeBtn.click()
+      return
+    }
+
     releaseEveryCapture(e.pointerId)
     setCanvasLive(false)
-    fireTool(fromToolNode(e) || toolNameAt(mapX(x, y)))
+    fireTool(fromToolNode(e) || toolNameAt(x, y))
   }
 
   var types = ['pointerdown', 'pointercancel']

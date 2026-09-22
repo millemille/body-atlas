@@ -60,12 +60,12 @@ function Shell() {
           </header>
 
           <div className="flex min-h-0 flex-1 items-start justify-between gap-3 px-4 pb-2 md:px-5">
-            <div className="pointer-events-auto relative z-30 hidden self-start md:block">
+            <div className="pointer-events-auto relative z-30 hidden h-full min-h-0 flex-col md:flex">
               <SelectionCard />
             </div>
             <StructuresRail />
           </div>
-          <div className="pointer-events-auto relative z-30 mt-auto md:hidden">
+          <div className="pointer-events-auto relative z-30 mt-auto max-h-[46%] min-h-0 overflow-hidden md:hidden">
             <SelectionCard mobile />
           </div>
         </div>
