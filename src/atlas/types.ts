@@ -24,7 +24,7 @@ export type Structure = {
   innervation?: string
   position: [number, number, number]
   focusDistance: number
-  /** BodyParts3D bone, Open3D muscle, or an interim glyph. */
+  /** BodyParts3D bone or vessel, Open3D muscle, or an interim glyph. */
   source?: 'bodyparts3d' | 'open3d' | 'interim'
   fma?: string
 }

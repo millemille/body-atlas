@@ -3,6 +3,7 @@ import { applyHandOrFootLabels } from './classifyBone'
 import { applyMuscleCopy } from './muscleCopy'
 import { MUSCLE_MESH_PARTS } from './generated/muscleCatalog'
 import { SKELETON_MESH_PARTS } from './generated/skeletonCatalog'
+import { VESSEL_MESH_PARTS } from './generated/vesselCatalog'
 import { L } from './layout'
 import type { Structure, SystemId } from './types'
 
@@ -10,7 +11,7 @@ function part(row: Structure): Structure {
   return row
 }
 
-/** Interim nerve / vessel / other glyphs. Live muscle is MUSCLE_MESH_PARTS. */
+/** Interim nerve and other glyphs. Live muscle is MUSCLE_MESH_PARTS. Live vessels are VESSEL_MESH_PARTS. */
 const INTERIM_PARTS: Structure[] = [
   part({
     id: 'spinal-cord',
@@ -78,71 +79,6 @@ const INTERIM_PARTS: Structure[] = [
     focusDistance: 1.25,
   }),
   part({
-    id: 'aorta',
-    system: 'vessel',
-    name: 'Aorta',
-    kind: 'Great vessel · arterial',
-    region: 'Thoracic / upper abdominal axis',
-    function: 'Primary arterial trunk through the chest in this figure.',
-    relation: 'Arch sits near the heart glyph; descending run follows the trunk.',
-    blurb:
-      'A ruby arch and descending trunk through the chest. Caliber is exaggerated so the primary arterial axis reads in silhouette. Select the trunk to hard-dim the rest.',
-    position: [0.02, 1.2, 0.04],
-    focusDistance: 1.25,
-  }),
-  part({
-    id: 'carotid-arteries',
-    system: 'vessel',
-    name: 'Carotid arteries',
-    kind: 'Arterial · neck',
-    region: 'Neck',
-    function: 'Paired ascent through the neck toward the head.',
-    relation: 'Rise beside the cervical stack; sit near the skull base.',
-    blurb:
-      'Paired ruby tubes in the neck. They suggest carotid ascent without bifurcation. Left and right share one structure id.',
-    position: [0, 1.48, 0.03],
-    focusDistance: 1.05,
-  }),
-  part({
-    id: 'vena-cava',
-    system: 'vessel',
-    name: 'Vena cava',
-    kind: 'Great vessel · venous',
-    region: 'Right trunk',
-    function: 'Venous counterpart to the aortic trunk.',
-    relation: 'Runs to the right of the aorta along the trunk.',
-    blurb:
-      'A slate-ruby column on the right of the trunk. Hepatic and renal inflows are omitted. Click the column — nearby liver and heart glyphs should not steal the pick when those layers are off.',
-    position: [0.05, 1.12, 0.02],
-    focusDistance: 1.25,
-  }),
-  part({
-    id: 'femoral-arteries',
-    system: 'vessel',
-    name: 'Femoral arteries',
-    kind: 'Arterial · lower limb',
-    region: 'Anterior thighs',
-    function: 'Lower-limb arterial path from each groin down the thigh.',
-    relation: 'Follow the anterior thigh near the femoral nerve glyphs.',
-    blurb:
-      'Ruby lines from each groin down the thigh. No profunda split. Select either line for the pair.',
-    position: [0, 0.62, 0.04],
-    focusDistance: 1.3,
-  }),
-  part({
-    id: 'subclavian-arteries',
-    system: 'vessel',
-    name: 'Subclavian arteries',
-    kind: 'Arterial · shoulder',
-    region: 'Shoulder girdle',
-    function: 'Short runs under each clavicle toward the arms.',
-    relation: 'Connect neck carotids to the upper-limb vessel glyphs.',
-    blurb:
-      'Short ruby runs under each clavicle toward the arms. There is no vertebral takeoff. The pick target is the short run itself.',
-    position: [0, 1.38, 0.03],
-    focusDistance: 1.15,
-  }),
-  part({
     id: 'brain',
     system: 'other',
     name: 'Brain',
@@ -164,7 +100,7 @@ const INTERIM_PARTS: Structure[] = [
     function: 'Heart-shaped landmark in the left chest.',
     relation: 'Sits inside the rib meshes, left of the venous column.',
     blurb:
-      'A viscera-toned wedge in the left chest. Chambers and vessels are omitted. The aorta glyph can sit beside it when Vessel is the second hot system.',
+      'A viscera-toned wedge in the left chest. Chambers are omitted. The aorta mesh can sit beside it when Vessel is the second hot system.',
     position: L.heart,
     focusDistance: 1.05,
   }),
@@ -225,6 +161,7 @@ const INTERIM_PARTS: Structure[] = [
 export const STRUCTURES: Structure[] = [
   ...SKELETON_MESH_PARTS.map((row) => applyBoneCopy(applyHandOrFootLabels(row))),
   ...MUSCLE_MESH_PARTS.map(applyMuscleCopy),
+  ...VESSEL_MESH_PARTS,
   ...INTERIM_PARTS.map(applyMuscleCopy),
 ]
 
