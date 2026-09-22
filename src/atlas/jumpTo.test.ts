@@ -106,6 +106,19 @@ test('Jump chrome is in-flow with zero body pins', () => {
   assert.equal(rig.includes('}, 1)'), false)
 })
 
+test('closing Focus keeps the camera instead of snapping home', () => {
+  const provider = readFileSync(join(srcRoot, 'atlas/AtlasProvider.tsx'), 'utf8')
+  const rig = readFileSync(join(srcRoot, 'components/canvas/FocusRig.tsx'), 'utf8')
+  const exit = provider.slice(provider.indexOf('const exitFocus'), provider.indexOf('const toggleFocus'))
+  const toggle = provider.slice(provider.indexOf('const toggleFocus'), provider.indexOf('const toggleIsolate'))
+  const reset = provider.slice(provider.indexOf('const resetView'), provider.indexOf('const markSceneReady'))
+  assert.equal(exit.includes('setViewEpoch'), false)
+  assert.equal(toggle.includes('setViewEpoch'), false)
+  assert.equal(reset.includes('setViewEpoch'), true)
+  assert.match(rig, /leavingFocus/)
+  assert.equal(rig.includes('}, 1)'), false)
+})
+
 test('region ease is an outside arc that still lands on the region frame', () => {
   const end = regionDolly(JUMP_BY_ID.back)
   const fromPos = new Vector3(1.6, 1.1, 2.4)

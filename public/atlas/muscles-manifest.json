@@ -17,7 +17,7 @@
       "sources": [
         "Pectoralis minor.r"
       ],
-      "vertexCount": 976,
+      "vertexCount": 970,
       "seat": null
     },
     {
@@ -26,7 +26,7 @@
       "sources": [
         "Serratus anterior muscle.r"
       ],
-      "vertexCount": 2660,
+      "vertexCount": 1158,
       "seat": null
     },
     {
@@ -35,7 +35,7 @@
       "sources": [
         "Subclavius muscle.r"
       ],
-      "vertexCount": 784,
+      "vertexCount": 782,
       "seat": null
     },
     {
@@ -44,7 +44,7 @@
       "sources": [
         "Deltoid muscle.r"
       ],
-      "vertexCount": 1490,
+      "vertexCount": 1440,
       "seat": null
     },
     {
@@ -53,7 +53,7 @@
       "sources": [
         "Trapezius muscle.r"
       ],
-      "vertexCount": 3002,
+      "vertexCount": 1874,
       "seat": "back"
     },
     {
@@ -62,7 +62,7 @@
       "sources": [
         "Latissimus dorsi.r"
       ],
-      "vertexCount": 2576,
+      "vertexCount": 2270,
       "seat": "back"
     },
     {
@@ -71,7 +71,7 @@
       "sources": [
         "Levator scapulae.r"
       ],
-      "vertexCount": 1652,
+      "vertexCount": 1090,
       "seat": "back"
     },
     {
@@ -80,7 +80,7 @@
       "sources": [
         "Rhomboid major muscle.r"
       ],
-      "vertexCount": 556,
+      "vertexCount": 396,
       "seat": "back"
     },
     {
@@ -89,7 +89,7 @@
       "sources": [
         "Rhomboid minor muscle.r"
       ],
-      "vertexCount": 452,
+      "vertexCount": 382,
       "seat": "back"
     },
     {
@@ -98,7 +98,7 @@
       "sources": [
         "Teres major muscle.r"
       ],
-      "vertexCount": 1070,
+      "vertexCount": 554,
       "seat": "back"
     },
     {
@@ -110,7 +110,7 @@
         "Subscapularis muscle.r",
         "Teres minor muscle.r"
       ],
-      "vertexCount": 6920,
+      "vertexCount": 3014,
       "seat": null
     },
     {
@@ -135,7 +135,7 @@
         "Spinalis cervicis muscle.r",
         "Spinalis thoracis muscle.r"
       ],
-      "vertexCount": 40060,
+      "vertexCount": 32283,
       "seat": "back"
     },
     {
@@ -183,7 +183,7 @@
       "sources": [
         "Serratus posterior superior muscle.r"
       ],
-      "vertexCount": 1366,
+      "vertexCount": 618,
       "seat": "back"
     },
     {
@@ -192,7 +192,7 @@
       "sources": [
         "Serratus posterior inferior muscle.r"
       ],
-      "vertexCount": 1674,
+      "vertexCount": 1448,
       "seat": "back"
     },
     {
@@ -211,7 +211,7 @@
       "sources": [
         "External abdominal oblique muscle.r"
       ],
-      "vertexCount": 10504,
+      "vertexCount": 5266,
       "seat": null
     },
     {
@@ -220,7 +220,7 @@
       "sources": [
         "Internal abdominal oblique muscle.r"
       ],
-      "vertexCount": 3226,
+      "vertexCount": 1914,
       "seat": null
     },
     {
@@ -229,7 +229,7 @@
       "sources": [
         "Transverse abdominal muscle.r"
       ],
-      "vertexCount": 4424,
+      "vertexCount": 1610,
       "seat": null
     },
     {
@@ -271,7 +271,7 @@
         "Lateral head of triceps brachii.r",
         "Medial head of triceps brachii.r"
       ],
-      "vertexCount": 3244,
+      "vertexCount": 3230,
       "seat": null
     },
     {
@@ -282,7 +282,7 @@
         "Lateral head of triceps brachii.r",
         "Medial head of triceps brachii.r"
       ],
-      "vertexCount": 3244,
+      "vertexCount": 3230,
       "seat": null
     },
     {

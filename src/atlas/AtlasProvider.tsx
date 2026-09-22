@@ -169,16 +169,15 @@ export function AtlasProvider({ children }: { children: ReactNode }) {
   const requestFocus = enterFocus
 
   const exitFocus = useCallback(() => {
+    // Leave the camera where Focus put it. viewEpoch is the home snap (reset).
     setJumpRegionId(null)
     setViewMode('default')
-    setViewEpoch((n) => n + 1)
   }, [])
 
   const toggleFocus = useCallback(() => {
     setViewMode((m) => {
       if (m === 'focus') {
         setJumpRegionId(null)
-        setViewEpoch((n) => n + 1)
         return 'default'
       }
       setJumpRegionId(null)

@@ -131,6 +131,7 @@ export function FocusRig({
   const viewModeRef = useRef(viewMode)
   const selectedRef = useRef(selected)
   const jumpRegionIdRef = useRef(jumpRegionId)
+  const wasFocus = useRef(false)
   viewModeRef.current = viewMode
   selectedRef.current = selected
   jumpRegionIdRef.current = jumpRegionId
@@ -166,11 +167,14 @@ export function FocusRig({
         booted.current = true
         snapHome(c, camera)
         lastEpoch.current = viewEpoch
+        wasFocus.current = viewMode === 'focus'
         if (!(viewMode === 'focus' && selected)) return
       }
 
       const epochChanged = viewEpoch !== lastEpoch.current
       lastEpoch.current = viewEpoch
+      const leavingFocus = wasFocus.current && viewMode === 'default'
+      wasFocus.current = viewMode === 'focus'
 
       if (viewMode === 'focus' && jumpRegionId) {
         const regionFrame = regionFrameFor(jumpRegionId, selected)
@@ -215,6 +219,23 @@ export function FocusRig({
         anim.current = null
         leanDelay.current = 0
         pendingLean.current = null
+        return
+      }
+
+      // Closing Focus keeps the dolly. Reset (viewEpoch) is what returns home.
+      if (leavingFocus) {
+        explore.current = null
+        anim.current = null
+        leanDelay.current = 0
+        pendingLean.current = null
+        c.enableDamping = true
+        c.minDistance = FOCUS_MIN_DISTANCE
+        c.maxDistance = SAFE_ORBIT_MAX
+        if (c.scale !== undefined) c.scale = 1
+        c.sphericalDelta?.set(0, 0, 0)
+        c.panOffset?.set(0, 0, 0)
+        c.update()
+        c.saveState()
         return
       }
 

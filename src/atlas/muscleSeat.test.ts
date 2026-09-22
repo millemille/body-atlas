@@ -19,15 +19,45 @@ async function load(url: string) {
   })
 }
 
-function localZ(root: Mesh['parent'], name: string) {
+function namedMesh(root: Mesh['parent'], name: string) {
   let mesh: Mesh | undefined
   root?.traverse((obj) => {
     if (obj instanceof Mesh && obj.name === name) mesh = obj
   })
   assert.ok(mesh, name)
+  return mesh
+}
+
+function localZ(root: Mesh['parent'], name: string) {
+  const mesh = namedMesh(root, name)
   mesh.geometry.computeBoundingBox()
   const box = mesh.geometry.boundingBox ?? new Box3()
   return { min: box.min.z, max: box.max.z }
+}
+
+const BLADE_X_MIN = 0.05
+const BLADE_X_MAX = 0.14
+const BLADE_Y_MIN = 1.18
+const BLADE_Y_MAX = 1.52
+const BLADE_Z_MAX = 0.08
+
+function worldCentroids(root: Mesh['parent'], name: string, origin: readonly [number, number, number]) {
+  const mesh = namedMesh(root, name)
+  const pos = mesh.geometry.getAttribute('position')
+  const index = mesh.geometry.getIndex()
+  const out: { x: number; y: number; z: number }[] = []
+  const tri = (i: number) => {
+    const vi = index ? index.getX(i) : i
+    return { x: pos.getX(vi) + origin[0], y: pos.getY(vi) + origin[1], z: pos.getZ(vi) + origin[2] }
+  }
+  const count = index ? index.count : pos.count
+  for (let i = 0; i + 2 < count; i += 3) {
+    const a = tri(i)
+    const b = tri(i + 1)
+    const c = tri(i + 2)
+    out.push({ x: (a.x + b.x + c.x) / 3, y: (a.y + b.y + c.y) / 3, z: (a.z + b.z + c.z) / 3 })
+  }
+  return out
 }
 
 test('Open3D kit seats pecs and abs on the anterior wall and keeps the back on the trunk', async () => {
@@ -64,13 +94,48 @@ test('Open3D kit seats pecs and abs on the anterior wall and keeps the back on t
   assert.ok(Math.abs(pecPart.position[2] - hugAnteriorWall(sternumWall, pecHalf)) < 1e-3)
   assert.ok(Math.abs(pecFace - (sternumWall + 0.01)) < 1e-3, `pec face ${pecFace} wall ${sternumWall}`)
 
-  const absWall =
-    0.5 * (xiphoidPart.position[2] + xiphoid.max + (l5Part.position[2] + l5.max))
+  const xiphoidWall = xiphoidPart.position[2] + xiphoid.max
+  const l5Wall = l5Part.position[2] + l5.max
   const absFace = absPart.position[2] + abs.max
-  const absHalf = (abs.max - abs.min) / 2
-  assert.ok(Math.abs(absPart.position[2] - hugAnteriorWall(absWall, absHalf)) < 1e-3)
-  assert.ok(Math.abs(absFace - (absWall + 0.01)) < 1e-3, `abs face ${absFace}`)
+  assert.ok(Math.abs(absFace - (xiphoidWall + 0.01)) < 1e-3, `abs face ${absFace} xiphoid ${xiphoidWall}`)
+  assert.ok(absFace > l5Wall + 0.05, `abs face ${absFace} sank onto L5 ${l5Wall}`)
+
+  const rectus = worldCentroids(muscles.scene, 'abdominal-wall', absPart.position)
+  assert.ok(rectus.some((c) => Math.abs(c.x) < 0.005), 'rectus covers the front midline')
+
+  for (const id of ['external-oblique', 'internal-oblique', 'transversus-abdominis'] as const) {
+    const part = STRUCTURE_BY_ID[id]
+    const cents = worldCentroids(muscles.scene, id, part.position)
+    const medial = cents.filter((c) => Math.abs(c.x) < 0.06)
+    assert.equal(medial.length, 0, `${id} stays lateral`)
+  }
 
   const t7Back = t7Part.position[2] + t7.min
   assert.ok(lat.position[2] > t7Back - 0.03, `latissimus z ${lat.position[2]} behind T7 ${t7Back}`)
+  const latZ = localZ(muscles.scene, 'latissimus')
+  const latFace = lat.position[2] + latZ.max
+  const absDeep = absPart.position[2] + abs.min
+  assert.ok(latFace < absDeep, `latissimus face ${latFace} is in front of rectus ${absDeep}`)
+
+  let bladeLeft = 0
+  let cuffLateral = 0
+  for (const part of MUSCLE_MESH_PARTS) {
+    const cents = worldCentroids(muscles.scene, part.id, part.position)
+    for (const c of cents) {
+      const ax = Math.abs(c.x)
+      // Catalog positions are rounded to 1e-5, so the rebuilt window needs a hair of slack.
+      if (
+        ax >= BLADE_X_MIN + 1e-4 &&
+        ax <= BLADE_X_MAX - 1e-4 &&
+        c.y >= BLADE_Y_MIN + 1e-4 &&
+        c.y <= BLADE_Y_MAX - 1e-4 &&
+        c.z < BLADE_Z_MAX - 1e-4
+      ) {
+        bladeLeft += 1
+      }
+      if (part.id === 'rotator-cuff' && ax > 0.16) cuffLateral += 1
+    }
+  }
+  assert.equal(bladeLeft, 0, `blade window still holds ${bladeLeft} triangles`)
+  assert.ok(cuffLateral > 100, `lateral cuff triangles ${cuffLateral}`)
 })

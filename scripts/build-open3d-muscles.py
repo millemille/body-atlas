@@ -6,12 +6,14 @@ several muscle maps are NC — and the atlas shades the mesh itself.
 
 Right-side Open3D meshes sit on atlas-left (−X). Bilateral leaves are mirrored.
 A rigid translation from shared midline bones seats the kit on the BodyParts3D
-skeleton. Pectoralis then uses hugAnteriorWall on the sternum; rectus uses a
-mix of the xiphoid and L5 anterior walls. Posterior leaves shift so their deep
-face sits a 1cm plate off the skeleton instead of floating behind it.
+skeleton. Pectoralis then uses hugAnteriorWall on the sternum. Rectus keeps its
+own slope from the xiphoid down to L5 height and seats its anterior face on the
+xiphoid wall — the L5 vertebral body is not the belly surface. Obliques lose
+the midline aponeurosis so they stay lateral. Posterior leaves shift only when
+they float behind the skeleton.
 
-Does not invent SCM, face, or deep-neck leaves the kit does not ship, and does
-not drop the scapular blade.
+Every leaf then drops triangles in the mid-scapular blade (BLADE_X_MAX). Does
+not invent SCM, face, or deep-neck leaves the kit does not ship.
 """
 
 from __future__ import annotations
@@ -38,8 +40,16 @@ OUT_WAVES = ROOT / "src/atlas/generated/muscleWaves.ts"
 OUT_LIC = ROOT / "public/atlas/LICENSE-Open3D.txt"
 
 PLATE = 0.01
-ABS_L5_MIX = 0.5
 MAX_POSTERIOR_SHIFT = 0.04
+# Mid-fossa only. 0.22 ate the lateral cuff (UAT-06). Kept on every leaf.
+BLADE_X_MIN = 0.05
+BLADE_X_MAX = 0.14
+BLADE_Y_MIN = 1.18
+BLADE_Y_MAX = 1.52
+BLADE_Z_MAX = 0.08
+# Rectus spans about ±0.08. Inside this, the front midline stays rectus.
+OBLIQUE_MEDIAL_X = 0.07
+LATERAL_ABDOMEN = {"external-oblique", "internal-oblique", "transversus-abdominis"}
 
 # id, name, region, side, seat, source mesh names
 # side: both | left | right. Open3D ".r" is atlas left.
@@ -616,6 +626,111 @@ def hug(mesh: trimesh.Trimesh, wall_z: float) -> float:
     return float(shift)
 
 
+def seat_rectus_face(mesh: trimesh.Trimesh, xiphoid_wall: float) -> float:
+    """Put the anterior face on the xiphoid wall plus the 1cm plate.
+
+    One Z shift keeps the sheet's own slope down to L5 height. Mixing the L5
+    vertebral anterior into the wall sinks that face behind the obliques.
+    """
+    face = float(mesh.vertices[:, 2].max())
+    shift = (xiphoid_wall + PLATE) - face
+    mesh.vertices[:, 2] += shift
+    return float(shift)
+
+
+def cover_midline(mesh: trimesh.Trimesh, band: float = 0.02, overlap: float = 0.012) -> None:
+    """Pull the medial edge across x=0 so a front midline ray does not fall through.
+
+    The Open3D halves stop short of each other. That slit is how latissimus
+    wins a belly click aimed at the linea alba.
+    """
+    x = np.array(mesh.vertices[:, 0], copy=True)
+    medial = np.abs(x) < band
+    if not np.any(medial):
+        return
+    sign = np.where(x >= 0.0, 1.0, -1.0)
+    mesh.vertices[medial, 0] = x[medial] - sign[medial] * overlap
+
+
+def keep_lateral(mesh: trimesh.Trimesh, medial_x: float) -> float:
+    """Drop the midline aponeurosis so this leaf stays on the lateral abdomen."""
+    centroids = mesh.triangles_center
+    drop = np.abs(centroids[:, 0]) < medial_x
+    if not np.any(drop):
+        return 0.0
+    mesh.update_faces(~drop)
+    mesh.remove_unreferenced_vertices()
+    return float(drop.mean())
+
+
+def drop_scapular_blade(mesh: trimesh.Trimesh) -> float:
+    """Drop mid-blade triangles on every leaf. Lateral cuff (|x| > BLADE_X_MAX) stays."""
+    centroids = mesh.triangles_center
+    ax = np.abs(centroids[:, 0])
+    drop = (
+        (ax >= BLADE_X_MIN)
+        & (ax <= BLADE_X_MAX)
+        & (centroids[:, 1] >= BLADE_Y_MIN)
+        & (centroids[:, 1] <= BLADE_Y_MAX)
+        & (centroids[:, 2] < BLADE_Z_MAX)
+    )
+    if not np.any(drop):
+        return 0.0
+    mesh.update_faces(~drop)
+    mesh.remove_unreferenced_vertices()
+    return float(drop.mean())
+
+
+def front_hit(mesh: trimesh.Trimesh, x: float, y: float) -> float | None:
+    """Highest Z where a -Z ray through (x, y) meets this mesh."""
+    tri = mesh.triangles
+    lo = tri.min(axis=1)
+    hi = tri.max(axis=1)
+    sel = (lo[:, 0] <= x) & (hi[:, 0] >= x) & (lo[:, 1] <= y) & (hi[:, 1] >= y)
+    if not np.any(sel):
+        return None
+    t = tri[sel]
+    ax, ay = t[:, 0, 0], t[:, 0, 1]
+    bx, by = t[:, 1, 0], t[:, 1, 1]
+    cx, cy = t[:, 2, 0], t[:, 2, 1]
+    den = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy)
+    ok = np.abs(den) > 1e-12
+    den = np.where(ok, den, 1.0)
+    w0 = ((by - cy) * (x - cx) + (cx - bx) * (y - cy)) / den
+    w1 = ((cy - ay) * (x - cx) + (ax - cx) * (y - cy)) / den
+    w2 = 1.0 - w0 - w1
+    inside = ok & (w0 >= -1e-4) & (w1 >= -1e-4) & (w2 >= -1e-4)
+    if not np.any(inside):
+        return None
+    z = w0[inside] * t[inside, 0, 2] + w1[inside] * t[inside, 1, 2] + w2[inside] * t[inside, 2, 2]
+    return float(z.max())
+
+
+def posterior_hit(mesh: trimesh.Trimesh, x: float, y: float) -> float | None:
+    """Lowest Z where a +Z ray through (x, y) meets this mesh."""
+    tri = mesh.triangles
+    lo = tri.min(axis=1)
+    hi = tri.max(axis=1)
+    sel = (lo[:, 0] <= x) & (hi[:, 0] >= x) & (lo[:, 1] <= y) & (hi[:, 1] >= y)
+    if not np.any(sel):
+        return None
+    t = tri[sel]
+    ax, ay = t[:, 0, 0], t[:, 0, 1]
+    bx, by = t[:, 1, 0], t[:, 1, 1]
+    cx, cy = t[:, 2, 0], t[:, 2, 1]
+    den = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy)
+    ok = np.abs(den) > 1e-12
+    den = np.where(ok, den, 1.0)
+    w0 = ((by - cy) * (x - cx) + (cx - bx) * (y - cy)) / den
+    w1 = ((cy - ay) * (x - cx) + (ax - cx) * (y - cy)) / den
+    w2 = 1.0 - w0 - w1
+    inside = ok & (w0 >= -1e-4) & (w1 >= -1e-4) & (w2 >= -1e-4)
+    if not np.any(inside):
+        return None
+    z = w0[inside] * t[inside, 0, 2] + w1[inside] * t[inside, 1, 2] + w2[inside] * t[inside, 2, 2]
+    return float(z.min())
+
+
 def posterior_shift(mesh: trimesh.Trimesh, boxes: list[dict]) -> float:
     """Move a back leaf forward when its sheet floats behind the nearest bone.
 
@@ -738,12 +853,12 @@ def main() -> None:
     pec_wall = anterior_wall(boxes, "body-of-sternum")
     xiphoid_wall = anterior_wall(boxes, "xiphoid-process")
     l5_wall = anterior_wall(boxes, "fifth-lumbar-vertebra")
-    abs_wall = (1 - ABS_L5_MIX) * xiphoid_wall + ABS_L5_MIX * l5_wall
-    print(f"walls pec={pec_wall:.4f} xiphoid={xiphoid_wall:.4f} l5={l5_wall:.4f} abs={abs_wall:.4f}")
+    print(f"walls pec={pec_wall:.4f} xiphoid={xiphoid_wall:.4f} l5_vertebra={l5_wall:.4f}")
 
     scene = trimesh.Scene()
     rows = []
     manifest = []
+    world_meshes: dict[str, trimesh.Trimesh] = {}
     for leaf_id, name, region, side, seat, sources in LEAVES:
         parts = []
         for src in sources:
@@ -756,13 +871,24 @@ def main() -> None:
         merged = compose(parts, side)
         if seat == "pec":
             shift = hug(merged, pec_wall)
+            cover_midline(merged)
             print(f"  hug pec {leaf_id} {shift:+.4f}")
         elif seat == "abs":
-            shift = hug(merged, abs_wall)
-            print(f"  hug abs {leaf_id} {shift:+.4f}")
+            shift = seat_rectus_face(merged, xiphoid_wall)
+            cover_midline(merged)
+            print(f"  seat rectus {leaf_id} {shift:+.4f}")
         elif seat == "back":
             shift = posterior_shift(merged, boxes)
             print(f"  seat back {leaf_id} {shift:+.4f}")
+        if leaf_id in LATERAL_ABDOMEN:
+            dropped = keep_lateral(merged, OBLIQUE_MEDIAL_X)
+            print(f"  lateral {leaf_id} drop={dropped:.1%}")
+        blade = drop_scapular_blade(merged)
+        if blade:
+            print(f"  blade {leaf_id} drop={blade:.1%}")
+        if len(merged.faces) < 8:
+            raise SystemExit(f"{leaf_id} lost its surface ({len(merged.faces)} faces)")
+        world_meshes[leaf_id] = merged.copy()
         center = bounds_center(merged)
         merged.vertices = np.array(merged.vertices, dtype=float) - center
         extent = merged.extents
@@ -788,6 +914,55 @@ def main() -> None:
             }
         )
         print(f"  {leaf_id:28} c={np.round(center, 3)} n={len(merged.vertices)}")
+
+    def owner_at(x: float, y: float) -> tuple[str, float] | None:
+        best = None
+        for leaf_id, mesh in world_meshes.items():
+            z = front_hit(mesh, x, y)
+            if z is None:
+                continue
+            if best is None or z > best[1]:
+                best = (leaf_id, z)
+        return best
+
+    for y in (0.96, 1.05, 1.14, 1.22):
+        hit = owner_at(0.0, y)
+        print(f"  front midline y={y:.2f} {hit}")
+        if hit is None or hit[0] != "abdominal-wall":
+            raise SystemExit(f"front midline y={y:.2f} is {hit}, want abdominal-wall")
+        side = owner_at(0.11, y)
+        print(f"  front lateral y={y:.2f} {side}")
+        if side is None or side[0] == "abdominal-wall" or side[0] == "latissimus":
+            raise SystemExit(f"front lateral y={y:.2f} is {side}, want an oblique")
+    chest = owner_at(0.0, 1.34)
+    print(f"  front sternum {chest}")
+    if chest is None or chest[0] != "pectoralis":
+        raise SystemExit(f"front sternum is {chest}, want pectoralis")
+    for x in (0.0, 0.06, 0.11):
+        for y in (1.00, 1.16, 1.30):
+            hit = owner_at(x, y)
+            if hit and hit[0] == "latissimus":
+                raise SystemExit(f"front click x={x:.2f} y={y:.2f} hit latissimus")
+
+    def back_owner(x: float, y: float) -> tuple[str, float] | None:
+        best = None
+        for leaf_id, mesh in world_meshes.items():
+            z = posterior_hit(mesh, x, y)
+            if z is None:
+                continue
+            if best is None or z < best[1]:
+                best = (leaf_id, z)
+        return best
+
+    for x, y in ((0.10, 1.36), (-0.10, 1.36), (0.12, 1.40)):
+        blocked = back_owner(x, y)
+        print(f"  mid blade x={x:.2f} y={y:.2f} {blocked}")
+        if blocked and blocked[1] < BLADE_Z_MAX:
+            raise SystemExit(f"mid blade x={x:.2f} y={y:.2f} still has {blocked[0]} at z={blocked[1]:.3f}")
+    lateral = back_owner(0.16, 1.345)
+    print(f"  lateral cuff {lateral}")
+    if lateral is None or lateral[0] != "rotator-cuff":
+        raise SystemExit(f"lateral cuff ray is {lateral}, want rotator-cuff")
 
     scene.export(OUT_GLB)
     OUT_MANIFEST.write_text(json.dumps({"count": len(rows), "source": "open3dmodel", "groups": manifest}, indent=2) + "\n")
