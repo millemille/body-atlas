@@ -102,6 +102,8 @@ test('Jump chrome is in-flow with zero body pins', () => {
   assert.match(rig, /JUMP_MS/)
   assert.match(rig, /regionFrame/)
   assert.match(rig, /easeRegionPose/)
+  // A positive useFrame priority tells R3F to skip its own gl.render.
+  assert.equal(rig.includes('}, 1)'), false)
 })
 
 test('region ease is an outside arc that still lands on the region frame', () => {

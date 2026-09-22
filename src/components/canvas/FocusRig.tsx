@@ -248,6 +248,7 @@ export function FocusRig({
     }
   }, [camera, controls, selected, viewMode, viewEpoch, focusNonce, jumpRegionId])
 
+  // Priority stays 0. A positive useFrame priority makes R3F skip gl.render.
   useFrame(() => {
     const c = controls.current as DampedControls | null
     if (!c) return
@@ -322,7 +323,7 @@ export function FocusRig({
       if (c.scale !== undefined) c.scale = 1
       c.update()
     }
-  }, 1)
+  })
 
   return null
 }
