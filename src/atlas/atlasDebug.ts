@@ -2,14 +2,12 @@ export type DebugEvent = {
   lastToolbarEvent: string
   at: number
   captureMounted: boolean
-  lastPointer: string
 }
 
 const start: DebugEvent = {
   lastToolbarEvent: 'none',
   at: 0,
   captureMounted: false,
-  lastPointer: '—',
 }
 let state: DebugEvent = { ...start }
 const listeners = new Set<(next: DebugEvent) => void>()
@@ -17,12 +15,10 @@ const listeners = new Set<(next: DebugEvent) => void>()
 function paintWindow() {
   const w = window as Window & {
     __atlasLastToolbarEvent?: string
-    __atlasLastPointer?: string
     __atlasCaptureMounted?: boolean
     __atlasPaintHud?: () => void
   }
   w.__atlasLastToolbarEvent = state.lastToolbarEvent
-  if (state.lastPointer !== '—') w.__atlasLastPointer = state.lastPointer
   w.__atlasCaptureMounted = true
   w.__atlasPaintHud?.()
 }
