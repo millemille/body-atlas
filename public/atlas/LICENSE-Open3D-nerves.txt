@@ -1,0 +1,18 @@
+Open3Dmodel peripheral nerve meshes in public/atlas/nerves.glb
+
+Source: AnatomyTOOL Open3D project, upper limb and lower limb, July 2025.
+https://anatomytool.org/open3dmodel
+The limb nerves were newly modelled for Open3Dmodel (CC BY-SA 4.0).
+Z-Anatomy (CC BY-SA 4.0) is the predecessor; it stored many of these paths
+as curves rather than the meshes this atlas needs.
+
+License: Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0).
+https://creativecommons.org/licenses/by-sa/4.0/
+
+Required attribution:
+"Open3DModel" by the Open3D project, license CC BY-SA
+
+Texture maps were omitted. Some Open3D maps are CC BY-NC-SA and are not shipped.
+The atlas shades these meshes yellow. The ".r" side is mirrored so both limbs
+carry the same named nerve. Cranial nerves in this GLB stay BodyParts3D.
+Share-alike: this derived GLB stays CC BY-SA.

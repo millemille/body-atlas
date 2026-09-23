@@ -1,21 +1,19 @@
 #!/usr/bin/env python3
-"""Bake the nerve meshes BodyParts3D 4.0 actually ships.
+"""Bake nerve meshes the licensed sources actually ship.
 
-Source: BodyParts3D (DBCLS) release 4.0, IS-A tree, polygon reduction 99%,
-untextured OBJ. License CC BY-SA 2.1 Japan. The zip has no texture maps.
+Cranial nerves and the short spinal cord: BodyParts3D 4.0, untextured OBJ,
+CC BY-SA 2.1 Japan. Sciatic, median, femoral, and brachial plexus are not in
+that release.
 
-The published 4.0 nerve set is the named cranial-nerve meshes in the IS-A
-tree (optic, trochlear, ophthalmic and its branches, ciliary ganglion, and
-the leftover nerve-trunk files) plus the spinal cord from the PART-OF tree.
-IS-A labels that same FJ1737 file as the central canal, which is not a nerve
-leaf. Sciatic, median, femoral, and brachial plexus are not in this release,
-so they are not invented. Each polygon file is assigned to the most specific
-nerve name that lists it. Parent labels such as "nerve" and "cranial nerve"
-do not become extra leaves. The spinal cord mesh this release ships is a
-short craniovertebral segment, not a full-length cord.
+Peripheral nerves: AnatomyTOOL Open3Dmodel upper-limb and lower-limb GLBs
+(CC BY-SA 4.0), the kit this atlas already uses for muscle. Those limb nerves
+were newly modelled; Z-Anatomy had turned the older paths into curves. Open3D
+ships one side (".r", which lands on atlas left). The other side is the same
+mesh mirrored, the same way the muscle bake mirrors unilateral leaves.
+Texture maps are stripped. Some Open3D maps are CC BY-NC-SA and must not ship.
 
-Seating uses the same bp3d_to_atlas transform as the skeleton and vessels.
-The muscle and vessel GLBs are not touched.
+Seating uses bp3d_to_atlas for the cranial set and the muscle rigid delta for
+the limb set. The muscle and vessel GLBs are not touched.
 """
 
 from __future__ import annotations
@@ -37,6 +35,13 @@ OBJ_DIR = Path("/tmp/bp3d/isa-obj")
 OUT_GLB = ROOT / "public/atlas/nerves.glb"
 OUT_TS = ROOT / "src/atlas/generated/nerveCatalog.ts"
 OUT_LIC = ROOT / "public/atlas/LICENSE-BodyParts3D-nerves.txt"
+OUT_LIC_OPEN3D = ROOT / "public/atlas/LICENSE-Open3D-nerves.txt"
+UPPER = Path("/tmp/open3d/upper.glb")
+LOWER = Path("/tmp/open3d/lower.glb")
+THORAX = Path("/tmp/open3d/thorax.glb")
+SKEL_TS = ROOT / "src/atlas/generated/skeletonCatalog.ts"
+NERVE_NAME = re.compile(r"nerve|plexus", re.I)
+SKIP_NAME = re.compile(r"bursa|tendon|ligament|artery|vein|muscle|sheath", re.I)
 
 
 def wanted(name: str) -> bool:
@@ -140,6 +145,156 @@ def display_name(name: str) -> str:
     return name[:1].upper() + name[1:]
 
 
+def index_meshes(scene: trimesh.Scene) -> dict[str, trimesh.Trimesh]:
+    found: dict[str, list[trimesh.Trimesh]] = {}
+    for node in scene.graph.nodes_geometry:
+        transform, geom_name = scene.graph[node]
+        geom = scene.geometry[geom_name]
+        if geom.vertices is None or len(geom.vertices) == 0:
+            continue
+        mesh = trimesh.Trimesh(
+            vertices=np.asarray(geom.vertices, dtype=np.float64),
+            faces=np.asarray(geom.faces),
+            process=False,
+        )
+        mesh.apply_transform(transform)
+        found.setdefault(str(node), []).append(mesh)
+    out = {}
+    for name, parts in found.items():
+        out[name] = parts[0] if len(parts) == 1 else trimesh.util.concatenate(parts)
+    return out
+
+
+def catalog_positions(path: Path) -> dict[str, np.ndarray]:
+    text = path.read_text()
+    out = {}
+    for block in text.split("\n  {"):
+        mid = re.search(r"id: '([^']+)'", block)
+        pos = re.search(r"position: \[([^\]]+)\]", block)
+        if not mid or not pos:
+            continue
+        out[mid.group(1)] = np.array([float(x) for x in pos.group(1).split(",")], dtype=float)
+    return out
+
+
+def bounds_center(mesh: trimesh.Trimesh) -> np.ndarray:
+    lo, hi = mesh.bounds
+    return (lo + hi) / 2
+
+
+def rigid_delta(thorax: dict[str, trimesh.Trimesh], positions: dict[str, np.ndarray]) -> np.ndarray:
+    pairs = [
+        ("Body of sternum", "body-of-sternum"),
+        ("Manubrium of sternum", "manubrium"),
+        ("Xiphoid process", "xiphoid-process"),
+        ("Thoracic vertebrae (T7)", "seventh-thoracic-vertebra"),
+        ("Lumbar vertebrae (L5)", "fifth-lumbar-vertebra"),
+        ("Sacrum", "sacrum"),
+        ("Atlas (C1)", "atlas"),
+    ]
+    deltas = []
+    for src, dst in pairs:
+        delta = positions[dst] - bounds_center(thorax[src])
+        deltas.append(delta)
+    mean = np.mean(deltas, axis=0)
+    if np.linalg.norm(mean - np.array([0.0003, 0.0173, 0.0939])) > 0.01:
+        raise SystemExit(f"Open3D seating delta drifted: {mean}")
+    return mean
+
+
+def mirror_x(mesh: trimesh.Trimesh) -> trimesh.Trimesh:
+    mirrored = mesh.copy()
+    mirrored.vertices = np.array(mirrored.vertices, copy=True)
+    mirrored.vertices[:, 0] *= -1
+    mirrored.faces = np.array(mirrored.faces[:, ::-1], copy=True)
+    return mirrored
+
+
+def peripheral_region(name: str) -> str:
+    n = name.lower()
+    if any(k in n for k in ("plexus", "pudendal", "iliohypogastric", "ilioinguinal", "genitofemoral", "coccygeal", "clunial")):
+        if any(k in n for k in ("brachial", "subclavian", "pectoral", "scapular", "thoracic nerve")):
+            return "Upper limb"
+        return "Pelvis"
+    if any(
+        k in n
+        for k in (
+            "sciatic", "femoral", "tibial", "fibular", "sural", "plantar", "obturator",
+            "saphenous", "gluteal", "calcaneal", "psoas", "quadratus femoris", "levator ani",
+        )
+    ):
+        return "Lower limb"
+    return "Upper limb"
+
+
+def clean_open3d_name(node: str) -> str:
+    name = re.sub(r"\.r$", "", node.strip())
+    return re.sub(r"\s+", " ", name).strip(" -")
+
+
+def add_open3d_nerves(scene: trimesh.Scene, rows: list[dict], used: set[str]) -> None:
+    thorax = index_meshes(trimesh.load(THORAX, force="scene"))
+    upper = index_meshes(trimesh.load(UPPER, force="scene"))
+    lower = index_meshes(trimesh.load(LOWER, force="scene"))
+    delta = rigid_delta(thorax, catalog_positions(SKEL_TS))
+    print("open3d delta", np.round(delta, 4))
+    sources = {**upper, **lower}
+    picked = [name for name in sources if NERVE_NAME.search(name) and not SKIP_NAME.search(name)]
+    if len(picked) < 40:
+        raise SystemExit(f"only {len(picked)} Open3D nerve meshes")
+    for node in sorted(picked, key=str.lower):
+        placed = sources[node].copy()
+        placed.vertices = np.asarray(placed.vertices, dtype=np.float64) + delta
+        lo, hi = placed.bounds
+        crosses = lo[0] < -0.02 and hi[0] > 0.02
+        label = clean_open3d_name(node)
+        if crosses:
+            sides = [(placed, "")]
+        else:
+            left = placed if bounds_center(placed)[0] <= 0 else mirror_x(placed)
+            sides = [(left, "left"), (mirror_x(left), "right")]
+        for mesh, side in sides:
+            mesh.remove_unreferenced_vertices()
+            if len(mesh.faces) < 4:
+                raise SystemExit(f"{node} has no surface")
+            world = mesh.copy()
+            centroid = np.asarray(bounds_center(mesh), dtype=np.float64)
+            mesh.vertices = np.asarray(mesh.vertices, dtype=np.float64) - centroid
+            extent = np.asarray(mesh.extents, dtype=np.float64)
+            focus = float(np.clip(0.75 + np.linalg.norm(extent) * 0.28, 0.9, 1.45))
+            mesh.visual = trimesh.visual.ColorVisuals(mesh=mesh)
+            pretty = display_name(label)
+            if side:
+                pretty = f"{pretty} · {side}"
+            pid = slug(pretty)
+            if pid in used:
+                pid = f"{pid}-open3d"
+            if pid in used:
+                raise SystemExit(f"duplicate nerve id {pid}")
+            used.add(pid)
+            scene.add_geometry(mesh, geom_name=pid, node_name=pid)
+            rows.append(
+                {
+                    "id": pid,
+                    "name": pretty,
+                    "kind": "Nerve · mesh",
+                    "region": peripheral_region(label),
+                    "function": f"Named {label} mesh in the Open3Dmodel kit.",
+                    "relation": "Seated on this skeleton with the same shift as the Open3D muscles.",
+                    "blurb": (
+                        f"{pretty} from Open3Dmodel. Untextured mesh, seated on this skeleton. "
+                        "Nerves are atlas yellow."
+                    ),
+                    "position": centroid,
+                    "focus": focus,
+                    "fma": "",
+                    "source": "open3d",
+                    "bounds": world.bounds,
+                }
+            )
+            print(f"  {pid:52} c={np.round(centroid, 3)} n={len(mesh.vertices)}")
+
+
 def main() -> None:
     names, elem = load_tables()
     owned = assign_leaves(names, elem)
@@ -189,6 +344,7 @@ def main() -> None:
                 "position": centroid,
                 "focus": focus,
                 "fma": fma,
+                "source": "bodyparts3d",
                 "bounds": world.bounds,
             }
         )
@@ -209,6 +365,23 @@ def main() -> None:
         raise SystemExit(f"optic nerve is not in the head: {optic['position']}")
     if len(rows) < 20:
         raise SystemExit(f"only {len(rows)} nerve leaves")
+    cranial = len(rows)
+    add_open3d_nerves(scene, rows, used)
+    by_id = {row["id"]: row for row in rows}
+    for required in ("sciatic-nerve-left", "sciatic-nerve-right", "femoral-nerve-left", "median-nerve-left"):
+        if required not in by_id or by_id[required]["source"] != "open3d":
+            raise SystemExit(f"missing peripheral {required}")
+    sciatic = by_id["sciatic-nerve-left"]
+    median = by_id["median-nerve-left"]
+    if sciatic["position"][0] > -0.04 or not (0.45 <= sciatic["position"][1] <= 1.05):
+        raise SystemExit(f"sciatic is not in the thigh: {sciatic['position']}")
+    if median["position"][0] > -0.1 or median["position"][1] < 0.8 or median["position"][1] > 1.45:
+        raise SystemExit(f"median is not in the arm: {median['position']}")
+    if not any("brachial-plexus" in row["id"] for row in rows):
+        raise SystemExit("brachial plexus parts are missing")
+    if any("bursa" in row["id"] for row in rows):
+        raise SystemExit("a bursa was imported as a nerve")
+    print("cranial", cranial, "peripheral", len(rows) - cranial)
 
     OUT_GLB.parent.mkdir(parents=True, exist_ok=True)
     scene.export(OUT_GLB)
@@ -236,14 +409,14 @@ def main() -> None:
             f"    blurb: '{ts_escape(row['blurb'])}',\n"
             f"    position: [{x:.5f}, {y:.5f}, {z:.5f}],\n"
             f"    focusDistance: {row['focus']:.2f},\n"
-            "    source: 'bodyparts3d',\n"
-            f"    fma: '{row['fma']}',\n"
-            "  }"
+            f"    source: '{row['source']}',\n"
+            + (f"    fma: '{row['fma']}',\n" if row.get("fma") else "")
+            + "  }"
         )
     OUT_TS.parent.mkdir(parents=True, exist_ok=True)
     OUT_TS.write_text(
         "import type { Structure } from '../types'\n\n"
-        "/** BodyParts3D 4.0 nerves in public/atlas/nerves.glb. Untextured. Do not edit by hand. */\n"
+        "/** BodyParts3D cranial nerves plus Open3D limb nerves in public/atlas/nerves.glb. Untextured. Do not edit by hand. */\n"
         "export const NERVE_MESH_PARTS = [\n"
         + ",\n".join(lines)
         + "\n] as const satisfies readonly Structure[]\n\n"
@@ -267,8 +440,28 @@ def main() -> None:
         "\"BodyParts3D — The Database Center for Life Science — CC BY-SA\"\n"
         "\n"
         "This GLB uses the same meter, Y-up, +X anatomical-right seating as skeleton.glb.\n"
-        "No texture maps are included. Sciatic, median, femoral, and brachial plexus\n"
-        "meshes are not in this release and are not invented here.\n"
+        "No texture maps are included. Limb nerves in the same file are Open3Dmodel,\n"
+        "CC BY-SA 4.0, also untextured. See LICENSE-Open3D-nerves.txt.\n"
+        "Share-alike: this derived GLB stays CC BY-SA.\n"
+    )
+    OUT_LIC_OPEN3D.write_text(
+        "Open3Dmodel peripheral nerve meshes in public/atlas/nerves.glb\n"
+        "\n"
+        "Source: AnatomyTOOL Open3D project, upper limb and lower limb, July 2025.\n"
+        "https://anatomytool.org/open3dmodel\n"
+        "The limb nerves were newly modelled for Open3Dmodel (CC BY-SA 4.0).\n"
+        "Z-Anatomy (CC BY-SA 4.0) is the predecessor; it stored many of these paths\n"
+        "as curves rather than the meshes this atlas needs.\n"
+        "\n"
+        "License: Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0).\n"
+        "https://creativecommons.org/licenses/by-sa/4.0/\n"
+        "\n"
+        "Required attribution:\n"
+        "\"Open3DModel\" by the Open3D project, license CC BY-SA\n"
+        "\n"
+        "Texture maps were omitted. Some Open3D maps are CC BY-NC-SA and are not shipped.\n"
+        "The atlas shades these meshes yellow. The \".r\" side is mirrored so both limbs\n"
+        "carry the same named nerve. Cranial nerves in this GLB stay BodyParts3D.\n"
         "Share-alike: this derived GLB stays CC BY-SA.\n"
     )
 

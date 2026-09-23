@@ -3,7 +3,7 @@ import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { Mesh } from 'three'
 
 export const NERVE_URL = '/atlas/nerves.glb'
-export const NERVE_BYTES = 988_452
+export const NERVE_BYTES = 20_381_796
 
 function parseGlb(buffer: ArrayBuffer): Promise<GLTF> {
   const loader = new GLTFLoader()

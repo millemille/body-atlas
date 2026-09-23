@@ -30,7 +30,7 @@ test('nerves, muscles, and vessels are meshes', () => {
   assert.equal(nerves.length, NERVE_MESH_COUNT)
   assert.ok(nerves.length >= 20)
   for (const nerve of nerves) {
-    assert.equal(nerve.source, 'bodyparts3d')
+    assert.ok(nerve.source === 'bodyparts3d' || nerve.source === 'open3d')
     assert.match(nerve.kind, /mesh/i)
     assert.equal(BOILERPLATE_RE.test(nerve.function), false)
     assert.doesNotMatch(nerve.blurb, /glyph|stand-in|placeholder|tube/i)

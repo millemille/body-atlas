@@ -13,6 +13,6 @@ Required attribution:
 "BodyParts3D — The Database Center for Life Science — CC BY-SA"
 
 This GLB uses the same meter, Y-up, +X anatomical-right seating as skeleton.glb.
-No texture maps are included. Sciatic, median, femoral, and brachial plexus
-meshes are not in this release and are not invented here.
+No texture maps are included. Limb nerves in the same file are Open3Dmodel,
+CC BY-SA 4.0, also untextured. See LICENSE-Open3D-nerves.txt.
 Share-alike: this derived GLB stays CC BY-SA.

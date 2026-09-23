@@ -22,11 +22,15 @@ function dist(a: string, b: string) {
   return Math.hypot(ar - br, ag - bg, ab - bb)
 }
 
-test('BodyParts3D nerve leaves replace the five placeholder cords', async () => {
+test('cranial nerves stay, and Open3D limb nerves sit outside the skull', async () => {
   assert.equal(NERVE_MESH_PARTS.length, NERVE_MESH_COUNT)
-  assert.equal(NERVE_MESH_COUNT, 35)
+  assert.equal(NERVE_MESH_COUNT, 231)
   const nerves = STRUCTURES.filter((part) => part.system === 'nerve')
   assert.equal(nerves.length, NERVE_MESH_COUNT)
+  const cranial = nerves.filter((part) => part.source === 'bodyparts3d')
+  const limb = nerves.filter((part) => part.source === 'open3d')
+  assert.equal(cranial.length, 35)
+  assert.equal(limb.length, 196)
   for (const id of ['spinal-cord', 'right-optic-nerve', 'left-optic-nerve', 'right-trochlear-nerve', 'nerve-trunk']) {
     const live = STRUCTURE_BY_ID[id]
     assert.equal(live.system, 'nerve')
@@ -34,9 +38,18 @@ test('BodyParts3D nerve leaves replace the five placeholder cords', async () => 
     assert.match(live.kind, /mesh/i)
     assert.doesNotMatch(live.blurb, /glyph|stand-in|placeholder|tube|teal/i)
   }
+  for (const id of ['sciatic-nerve-left', 'sciatic-nerve-right', 'femoral-nerve-left', 'median-nerve-left', 'ulnar-nerve-right']) {
+    const live = STRUCTURE_BY_ID[id]
+    assert.equal(live.source, 'open3d')
+    assert.doesNotMatch(live.blurb, /glyph|stand-in|placeholder|\btube\b|map_/i)
+    assert.ok(Math.abs(live.position[0]) > 0.04)
+    assert.ok(live.position[1] < 1.4)
+  }
+  assert.ok(nerves.some((part) => part.id.includes('brachial-plexus')))
   for (const invented of ['sciatic-nerves', 'median-nerves', 'femoral-nerves', 'brachial-plexus', 'sternocleidomastoid']) {
     assert.equal(STRUCTURE_BY_ID[invented], undefined, invented)
   }
+  assert.equal(nerves.some((part) => part.id.includes('bursa')), false)
   const cord = STRUCTURE_BY_ID['spinal-cord']
   const optic = STRUCTURE_BY_ID['right-optic-nerve']
   assert.ok(Math.abs(cord.position[0]) < 0.02)
@@ -59,6 +72,8 @@ test('BodyParts3D nerve leaves replace the five placeholder cords', async () => 
   })
   assert.equal(names.size, NERVE_MESH_COUNT)
   assert.ok(names.has('spinal-cord'))
+  assert.ok(names.has('sciatic-nerve-left'))
+  assert.ok(names.has('median-nerve-right'))
   assert.equal(names.has('sciatic-nerves'), false)
 })
 
