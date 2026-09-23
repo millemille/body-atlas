@@ -1,118 +1,71 @@
-import { L } from '@/atlas/layout'
-import { Tube } from '../primitives'
+import { useEffect, useMemo, useState } from 'react'
+import { Group, Mesh, type BufferGeometry } from 'three'
+import { useAtlas } from '@/atlas/AtlasProvider'
+import { NERVE_MESH_PARTS } from '@/atlas/generated/nerveCatalog'
+import { fetchNerveGltf, peekCachedNerves } from '@/atlas/nerveLoad'
+import { AtlasMesh } from '../AtlasMesh'
+import { SystemMaterial } from '../materials'
 import { StructureGroup } from '../StructureGroup'
 
+function geometriesById(root: Group): Map<string, BufferGeometry> {
+  const map = new Map<string, BufferGeometry>()
+  root.traverse((obj) => {
+    if (obj instanceof Mesh && obj.name && obj.geometry) {
+      map.set(obj.name, obj.geometry)
+    }
+  })
+  return map
+}
+
+/**
+ * Live Nerve path: BodyParts3D cranial nerves and spinal cord from nerves.glb.
+ * The layer stays unmounted until Nerve is hot, so Muscle remains first-hit.
+ */
 export function NerveLayer() {
+  const { hotSystems } = useAtlas()
+  const nerveHot = hotSystems.includes('nerve')
+  const [scene, setScene] = useState<Group | null>(() => peekCachedNerves())
+
+  useEffect(() => {
+    const cached = peekCachedNerves()
+    if (cached) {
+      setScene(cached)
+      return
+    }
+    let dead = false
+    fetchNerveGltf()
+      .then((next) => {
+        if (!dead) setScene(next)
+      })
+      .catch(() => {
+        /* NerveLayer stays empty; muscle and skeleton remain pickable */
+      })
+    return () => {
+      dead = true
+    }
+  }, [])
+
+  const mounted = useMemo(() => {
+    if (!scene) return []
+    const byName = geometriesById(scene)
+    return NERVE_MESH_PARTS.flatMap((part) => {
+      const geometry = byName.get(part.id)
+      return geometry ? [{ part, geometry }] : []
+    })
+  }, [scene])
+
+  if (!scene || !nerveHot) return null
+
   return (
-    <group>
-      <StructureGroup id="spinal-cord">
-        <Tube
-          points={[
-            [0, 1.5, -0.04],
-            [0, 1.36, -0.05],
-            [0, 1.18, -0.05],
-            [0, 1.0, -0.04],
-            [0, 0.9, -0.03],
-          ]}
-          radius={0.0038}
-          system="nerve"
-          tubular={64}
-        />
-      </StructureGroup>
-
-      <StructureGroup id="brachial-plexus">
-        <Tube
-          points={[
-            [0, 1.44, -0.02],
-            [-0.08, 1.4, 0.01],
-            [-0.18, 1.34, 0.01],
-            [-0.24, 1.2, 0.02],
-            [-0.27, 1.08, 0.03],
-          ]}
-          radius={0.0028}
-          system="nerve"
-        />
-        <Tube
-          points={[
-            [0, 1.44, -0.02],
-            [0.08, 1.4, 0.01],
-            [0.18, 1.34, 0.01],
-            [0.24, 1.2, 0.02],
-            [0.27, 1.08, 0.03],
-          ]}
-          radius={0.0028}
-          system="nerve"
-        />
-      </StructureGroup>
-
-      <StructureGroup id="sciatic-nerves">
-        <Tube
-          points={[
-            [-0.04, 0.9, -0.04],
-            [-0.09, 0.78, -0.02],
-            [-0.1, 0.62, 0],
-            [-0.11, 0.48, 0.02],
-            [-0.1, 0.28, 0.01],
-          ]}
-          radius={0.0032}
-          system="nerve"
-        />
-        <Tube
-          points={[
-            [0.04, 0.9, -0.04],
-            [0.09, 0.78, -0.02],
-            [0.1, 0.62, 0],
-            [0.11, 0.48, 0.02],
-            [0.1, 0.28, 0.01],
-          ]}
-          radius={0.0032}
-          system="nerve"
-        />
-      </StructureGroup>
-
-      <StructureGroup id="median-nerves">
-        <Tube
-          points={[
-            [-0.27, 1.08, 0.03],
-            [-0.28, 0.96, 0.04],
-            [-0.3, 0.8, 0.05],
-          ]}
-          radius={0.0022}
-          system="nerve"
-        />
-        <Tube
-          points={[
-            [0.27, 1.08, 0.03],
-            [0.28, 0.96, 0.04],
-            [0.3, 0.8, 0.05],
-          ]}
-          radius={0.0022}
-          system="nerve"
-        />
-      </StructureGroup>
-
-      <StructureGroup id="femoral-nerves">
-        <Tube
-          points={[
-            [-0.04, 0.9, 0.04],
-            L.hipL,
-            [-0.1, 0.66, 0.05],
-            [-0.11, 0.5, 0.04],
-          ]}
-          radius={0.0026}
-          system="nerve"
-        />
-        <Tube
-          points={[
-            [0.04, 0.9, 0.04],
-            L.hipR,
-            [0.1, 0.66, 0.05],
-            [0.11, 0.5, 0.04],
-          ]}
-          radius={0.0026}
-          system="nerve"
-        />
-      </StructureGroup>
+    <group name="nerve-mesh-layer">
+      {mounted.map(({ part, geometry }) => (
+        <StructureGroup key={part.id} id={part.id}>
+          <AtlasMesh position={part.position} castShadow={false} receiveShadow={false}>
+            <primitive object={geometry} attach="geometry" />
+            <SystemMaterial kind="nerve" />
+          </AtlasMesh>
+        </StructureGroup>
+      ))}
     </group>
   )
 }

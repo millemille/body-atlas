@@ -9,7 +9,7 @@ function cardFocus() {
 }
 
 const FOOTNOTE =
-  'Illustrative mockup only — not a scan, not a clinical map. Skeleton and muscle meshes: BodyParts3D (DBCLS) / Z-Anatomy, CC BY-SA (attribute + share-alike). Vessel meshes: BodyParts3D (DBCLS), CC BY-SA, untextured. Nerve and other stay glyphs.'
+  'Illustrative mockup only — not a scan, not a clinical map. Skeleton and muscle meshes: BodyParts3D (DBCLS) / Z-Anatomy, CC BY-SA (attribute + share-alike). Vessel meshes: BodyParts3D (DBCLS), CC BY-SA, untextured. Nerve meshes: BodyParts3D (DBCLS), CC BY-SA, untextured. Other stays glyphs.'
 
 function fieldRows(part: Structure): { label: string; value: string }[] {
   const system = SYSTEMS.find((s) => s.id === part.system)?.label ?? part.system

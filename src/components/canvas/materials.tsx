@@ -23,7 +23,7 @@ export function SystemMaterial({
   const stash = (m: { userData: Record<string, number> }) => {
     m.userData.baseOpacity = baseOpacity
     m.userData.baseEmissive =
-      kind === 'nerve' ? 0.07 : kind === 'vessel-core' ? 0.22 : 0.012
+      kind === 'vessel-core' ? 0.22 : 0.012
   }
 
   if (kind === 'skeleton') {
@@ -70,19 +70,23 @@ export function SystemMaterial({
   }
 
   if (kind === 'nerve') {
+    const glow = 0.4
     return (
-      <meshPhysicalMaterial
-        color={SABRINA.nerveTeal}
+      <meshStandardMaterial
+        color={SABRINA.nerveYellow}
         roughness={0.42}
         metalness={0}
-        emissive={SABRINA.nerveTeal}
-        emissiveIntensity={0.08}
-        envMapIntensity={0.18}
-        specularIntensity={0.1}
+        emissive={SABRINA.nerveYellow}
+        emissiveIntensity={glow}
+        envMapIntensity={0.15}
         transparent
         opacity={baseOpacity}
+        depthWrite
         toneMapped={false}
-        onUpdate={stash}
+        onUpdate={(m) => {
+          m.userData.baseOpacity = baseOpacity
+          m.userData.baseEmissive = glow
+        }}
       />
     )
   }

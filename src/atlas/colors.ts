@@ -14,7 +14,8 @@ export const SABRINA = {
   bonePorcelain: '#D4C8B0',
   boneShade: '#C9BBA3',
   muscleRose: '#B86B6B',
-  nerveTeal: '#3AD1C7',
+  /** Bright nerve yellow. Teal was the chrome accent and sat too close to the glass. */
+  nerveYellow: '#FFE14A',
   /** Bright arterial red. The old ruby sat on the void background. */
   vesselRuby: '#FF4D42',
   /** Bright venous blue. The old slate sat on the void background. */
@@ -27,7 +28,7 @@ export const SABRINA = {
 export const BASE_OPACITY = {
   skeleton: 0.97,
   muscle: 0.5,
-  nerve: 0.88,
+  nerve: 0.94,
   vessel: 0.94,
   other: 0.42,
   mannequin: 0.08,

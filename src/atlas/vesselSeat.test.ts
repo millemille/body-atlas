@@ -88,11 +88,6 @@ test('vessel colors read on the dark background and the muscle figure is unchang
   assert.equal(SABRINA.vesselRuby, '#FF4D42')
   assert.equal(SABRINA.vesselVein, '#3B96FF')
   assert.ok(BASE_OPACITY.vessel >= 0.9)
-  const nerves = STRUCTURES.filter((part) => part.system === 'nerve')
-  assert.ok(nerves.length >= 5)
-  for (const nerve of nerves) {
-    assert.notEqual(nerve.source, 'bodyparts3d')
-  }
   assert.equal(STRUCTURES.some((part) => part.id === 'sternocleidomastoid'), false)
   const muscleBytes = readFileSync(new URL('../../public/atlas/muscles.glb', import.meta.url)).byteLength
   assert.equal(muscleBytes, MUSCLE_BYTES)
