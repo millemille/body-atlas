@@ -22,7 +22,6 @@ export const SABRINA = {
   vesselVein: '#3B96FF',
   organRose: '#B86B6B',
   organCoral: '#C48982',
-  skin: '#D8D4CE',
 } as const
 
 export const BASE_OPACITY = {
@@ -31,5 +30,4 @@ export const BASE_OPACITY = {
   nerve: 0.94,
   vessel: 0.94,
   other: 0.42,
-  mannequin: 0.08,
 } as const

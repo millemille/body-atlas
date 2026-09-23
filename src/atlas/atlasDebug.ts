@@ -27,10 +27,6 @@ function paintWindow() {
   w.__atlasPaintHud?.()
 }
 
-export function getDebugEvent() {
-  return state
-}
-
 export function subscribeDebug(fn: (next: DebugEvent) => void) {
   listeners.add(fn)
   fn(state)
@@ -46,14 +42,6 @@ function emit() {
 
 export function markCaptureMounted() {
   state = { ...state, captureMounted: true, lastToolbarEvent: state.lastToolbarEvent === 'none' ? 'capture: mounted' : state.lastToolbarEvent }
-  emit()
-}
-
-export function recordPointer(x: number, y: number, hit: 'dock' | 'canvas' | 'other') {
-  state = {
-    ...state,
-    lastPointer: `${Math.round(x)},${Math.round(y)} → hit=${hit}`,
-  }
   emit()
 }
 

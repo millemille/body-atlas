@@ -1,21 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Group, Mesh, type BufferGeometry } from 'three'
+import { Group } from 'three'
 import { useAtlas } from '@/atlas/AtlasProvider'
 import { SKELETON_MESH_PARTS } from '@/atlas/generated/skeletonCatalog'
-import { fetchSkeletonGltf, peekCachedSkeleton } from '@/atlas/skeletonLoad'
+import { SKELETON_BYTES, fetchSkeletonGltf, peekCachedSkeleton } from '@/atlas/skeletonLoad'
 import { AtlasMesh } from '../AtlasMesh'
+import { geometriesById } from '../geometriesById'
 import { SystemMaterial } from '../materials'
 import { StructureGroup } from '../StructureGroup'
-
-function geometriesById(root: Group): Map<string, BufferGeometry> {
-  const map = new Map<string, BufferGeometry>()
-  root.traverse((obj) => {
-    if (obj instanceof Mesh && obj.name && obj.geometry) {
-      map.set(obj.name, obj.geometry)
-    }
-  })
-  return map
-}
 
 export function SkeletonLayer() {
   const { hotSystems, reportSkeletonLoad, markSceneReady } = useAtlas()
@@ -35,15 +26,15 @@ export function SkeletonLayer() {
       setScene(cached)
       reportSkeletonLoad({
         phase: 'ready',
-        loaded: 10_797_000,
-        total: 10_797_000,
+        loaded: SKELETON_BYTES,
+        total: SKELETON_BYTES,
         error: null,
       })
       markSceneReady()
       return
     }
     let dead = false
-    reportSkeletonLoad({ phase: 'download', loaded: 0, total: 10_797_000, error: null })
+    reportSkeletonLoad({ phase: 'download', loaded: 0, total: SKELETON_BYTES, error: null })
     fetchSkeletonGltf((loaded, total) => {
       if (!dead) reportSkeletonLoad({ phase: 'download', loaded, total, error: null })
     })
@@ -51,15 +42,15 @@ export function SkeletonLayer() {
         if (dead) return
         reportSkeletonLoad({
           phase: 'parse',
-          loaded: 10_797_000,
-          total: 10_797_000,
+          loaded: SKELETON_BYTES,
+          total: SKELETON_BYTES,
           error: null,
         })
         setScene(next)
         reportSkeletonLoad({
           phase: 'ready',
-          loaded: 10_797_000,
-          total: 10_797_000,
+          loaded: SKELETON_BYTES,
+          total: SKELETON_BYTES,
           error: null,
         })
         markSceneReady()
@@ -67,7 +58,7 @@ export function SkeletonLayer() {
       .catch((err: unknown) => {
         if (dead) return
         const message = err instanceof Error ? err.message : 'skeleton.glb failed'
-        reportSkeletonLoad({ phase: 'error', loaded: 0, total: 10_797_000, error: message })
+        reportSkeletonLoad({ phase: 'error', loaded: 0, total: SKELETON_BYTES, error: message })
       })
     return () => {
       dead = true
