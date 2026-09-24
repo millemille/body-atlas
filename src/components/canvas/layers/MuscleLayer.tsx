@@ -10,7 +10,6 @@ import { StructureGroup } from '../StructureGroup'
 
 /**
  * Live Muscle path: Open3D leaves from muscles.glb, first-hit. Latissimus included.
- * Procedural gels stay parked — they are not mounted.
  */
 export function MuscleLayer() {
   const { hotSystems } = useAtlas()
