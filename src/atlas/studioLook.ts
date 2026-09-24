@@ -23,10 +23,7 @@ export const FOCUS_EXPOSURE = 1.08
 export const BONE_ROUGHNESS = 0.54
 export const BONE_ENV_MAP = 0.22
 
-/** Parked gel satin. The live BodyParts3D mesh does not use this. */
-export const MUSCLE_ROUGHNESS = 0.8
-
-/** Firmer BodyParts3D muscle mesh. Gels stay at MUSCLE_ROUGHNESS / gel opacity. */
+/** Firmer BodyParts3D muscle mesh. */
 export const MESH_MUSCLE_COLOR = '#C47E76'
 export const MESH_MUSCLE_ROUGHNESS = 0.58
 export const MESH_MUSCLE_OPACITY = 0.9
