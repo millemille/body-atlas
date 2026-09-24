@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { BOILERPLATE_RE, applyBoneCopy, boneCopy } from './boneCopy'
 import { SKELETON_MESH_PARTS } from './generated/skeletonCatalog'
+import { NERVE_MESH_COUNT } from './generated/nerveCatalog'
+import { VESSEL_MESH_COUNT } from './generated/vesselCatalog'
 import { STRUCTURE_BY_ID, STRUCTURES } from './structures'
 
 test('every densify bone has real copy, not kit boilerplate', () => {
@@ -19,17 +21,28 @@ test('every densify bone has real copy, not kit boilerplate', () => {
   }
 })
 
-test('nerve / vessel stay glyph copy; muscles are no longer placeholders', () => {
+test('nerves, muscles, and vessels are meshes', () => {
   const muscle = STRUCTURES.find((s) => s.system === 'muscle')
   assert.ok(muscle)
   assert.doesNotMatch(muscle.blurb, /interim placeholder|See boneCopy/i)
   assert.match(muscle.kind, /mesh/i)
-  const nerve = STRUCTURES.find((s) => s.system === 'nerve')
-  assert.ok(nerve)
-  assert.equal(BOILERPLATE_RE.test(nerve.function), false)
-  const vessel = STRUCTURES.find((s) => s.system === 'vessel')
-  assert.ok(vessel)
-  assert.match(vessel.blurb, /glyph|exaggerated|stand-in|placeholder/i)
+  const nerves = STRUCTURES.filter((s) => s.system === 'nerve')
+  assert.equal(nerves.length, NERVE_MESH_COUNT)
+  assert.ok(nerves.length >= 20)
+  for (const nerve of nerves) {
+    assert.ok(nerve.source === 'bodyparts3d' || nerve.source === 'open3d')
+    assert.match(nerve.kind, /mesh/i)
+    assert.equal(BOILERPLATE_RE.test(nerve.function), false)
+    assert.doesNotMatch(nerve.blurb, /glyph|stand-in|placeholder|tube/i)
+  }
+  const vessels = STRUCTURES.filter((s) => s.system === 'vessel')
+  assert.equal(vessels.length, VESSEL_MESH_COUNT)
+  assert.ok(vessels.length >= 300)
+  for (const vessel of vessels) {
+    assert.equal(vessel.source, 'bodyparts3d')
+    assert.match(vessel.kind, /mesh/i)
+    assert.doesNotMatch(vessel.blurb, /glyph|exaggerated|stand-in|placeholder|tube/i)
+  }
 })
 
 test('calcaneus / femur / little-toe phalanx / sternum are bone-specific', () => {

@@ -1,3 +1,6 @@
+import { OPEN3D_EXTRA_COPY } from './generated/open3dMuscleCopy'
+import { OPEN3D_MUSCLE_IDS } from './generated/muscleIds'
+
 /** Clinical-friendly muscle card copy. Applied to catalog fields; the card just reads them. */
 
 export type MuscleCopy = {
@@ -7,28 +10,7 @@ export type MuscleCopy = {
   kind?: string
 }
 
-export const LIVE_MUSCLE_IDS = [
-  'pectoralis',
-  'biceps-left',
-  'biceps-right',
-  'triceps-left',
-  'triceps-right',
-  'deltoids',
-  'abdominal-wall',
-  'quadriceps',
-  'trapezius',
-  'gluteus',
-  'gastrocnemius',
-  'hamstrings',
-  'soleus',
-  'iliopsoas',
-  'forearm-flexors',
-  'rotator-cuff',
-  'erector-spinae',
-  'hip-adductors',
-  'tibialis-anterior',
-  'forearm-extensors',
-] as const
+export const LIVE_MUSCLE_IDS = OPEN3D_MUSCLE_IDS
 
 const COPY: Record<string, MuscleCopy> = {
   pectoralis: {
@@ -83,7 +65,7 @@ const COPY: Record<string, MuscleCopy> = {
     function: 'Elevates, retracts, and rotates the scapula; upper fibers also extend the neck.',
     relation: 'Occiput, nuchal ligament, and spinous processes C7–T12 to the clavicle, acromion, and scapular spine.',
     blurb:
-      'Kite-shaped upper-back volume from the neck toward both shoulders. Descending, transverse, and ascending parts are one mesh this pass.',
+      'Upper-back sheet from the nuchal line toward both shoulders. The descending fibers of this leaf reach the occiput. Sternocleidomastoid is not added. Descending, transverse, and ascending parts stay one mesh.',
   },
   latissimus: {
     function: 'Adducts, extends, and internally rotates the humerus; the climbing / rowing muscle of the back.',
@@ -137,7 +119,7 @@ const COPY: Record<string, MuscleCopy> = {
     function: 'Extends and laterally bends the spine; the deep back column that holds stance.',
     relation: 'Sacrum, iliac crest, and lumbar fascia to the thoracic transverse processes and ribs.',
     blurb:
-      'Paired paraspinal columns from the sacrum toward C7. Erector spinae and multifidus are one stand-in; individual slips and rotatores are not mapped.',
+      'Iliocostalis, longissimus, and spinalis from the Open3D back kit, as one paraspinal leaf. Multifidus is its own leaf.',
   },
   'hip-adductors': {
     function: 'Adducts the thigh; also assists hip flexion and medial rotation.',
@@ -151,6 +133,7 @@ const COPY: Record<string, MuscleCopy> = {
     blurb:
       'Paired anterior-leg straps from the proximal tibia to the medial midfoot. Extensor hallucis and digitorum are not split out.',
   },
+  ...OPEN3D_EXTRA_COPY,
   'forearm-extensors': {
     function: 'Extends the wrist and fingers; the posterior forearm mass.',
     relation: 'Lateral epicondyle of the humerus to the dorsal carpus and digits.',
@@ -171,7 +154,7 @@ export function applyMuscleCopy<
     relation: string
     blurb: string
     kind: string
-    source?: 'bodyparts3d' | 'interim'
+    source?: 'bodyparts3d' | 'open3d' | 'interim'
   },
 >(part: T): T {
   if (part.system !== 'muscle') return part
@@ -182,6 +165,10 @@ export function applyMuscleCopy<
     function: next.function,
     relation: next.relation,
     blurb: next.blurb,
-    kind: next.kind ?? (part.source === 'bodyparts3d' ? 'Muscle · mesh' : 'Muscle · densify volume'),
+    kind:
+      next.kind ??
+      (part.source === 'bodyparts3d' || part.source === 'open3d'
+        ? 'Muscle · mesh'
+        : 'Muscle · densify volume'),
   }
 }

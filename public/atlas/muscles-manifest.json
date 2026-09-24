@@ -1,319 +1,573 @@
 {
-  "count": 20,
+  "count": 57,
+  "source": "open3dmodel",
   "groups": [
     {
       "id": "pectoralis",
-      "fmas": [
-        "FMA13375",
-        "FMA34690",
-        "FMA45874",
-        "FMA79979"
+      "name": "Pectoralis",
+      "sources": [
+        "Pectoralis major.r"
       ],
-      "sourceNames": [
-        "right pectoralis minor",
-        "clavicular part of right pectoralis major",
-        "abdominal part of right pectoralis major",
-        "sternocostal part of right pectoralis major"
-      ],
-      "laterality": "bilateral",
-      "vertexCount": 29460
+      "vertexCount": 2920,
+      "seat": "pec"
     },
     {
-      "id": "biceps-left",
-      "fmas": [
-        "FMA37684",
-        "FMA37686"
+      "id": "pectoralis-minor",
+      "name": "Pectoralis minor",
+      "sources": [
+        "Pectoralis minor.r"
       ],
-      "sourceNames": [
-        "short head of right biceps brachii",
-        "long head of right biceps brachii"
-      ],
-      "laterality": "mirror",
-      "vertexCount": 2792
+      "vertexCount": 976,
+      "seat": null
     },
     {
-      "id": "biceps-right",
-      "fmas": [
-        "FMA37684",
-        "FMA37686"
+      "id": "serratus-anterior",
+      "name": "Serratus anterior",
+      "sources": [
+        "Serratus anterior muscle.r"
       ],
-      "sourceNames": [
-        "short head of right biceps brachii",
-        "long head of right biceps brachii"
-      ],
-      "laterality": "source",
-      "vertexCount": 2792
+      "vertexCount": 2660,
+      "seat": null
     },
     {
-      "id": "triceps-left",
-      "fmas": [
-        "FMA37695",
-        "FMA37697",
-        "FMA37699"
+      "id": "subclavius",
+      "name": "Subclavius",
+      "sources": [
+        "Subclavius muscle.r"
       ],
-      "sourceNames": [
-        "medial head of right triceps brachii",
-        "lateral head of right triceps brachii",
-        "long head of right triceps brachii"
-      ],
-      "laterality": "mirror",
-      "vertexCount": 3403
-    },
-    {
-      "id": "triceps-right",
-      "fmas": [
-        "FMA37695",
-        "FMA37697",
-        "FMA37699"
-      ],
-      "sourceNames": [
-        "medial head of right triceps brachii",
-        "lateral head of right triceps brachii",
-        "long head of right triceps brachii"
-      ],
-      "laterality": "source",
-      "vertexCount": 3403
+      "vertexCount": 784,
+      "seat": null
     },
     {
       "id": "deltoids",
-      "fmas": [
-        "FMA34680",
-        "FMA34682",
-        "FMA34684"
+      "name": "Deltoids",
+      "sources": [
+        "Deltoid muscle.r"
       ],
-      "sourceNames": [
-        "clavicular part of right deltoid",
-        "acromial part of right deltoid",
-        "spinal part of right deltoid"
-      ],
-      "laterality": "bilateral",
-      "vertexCount": 10346
+      "vertexCount": 1490,
+      "seat": null
     },
     {
       "id": "trapezius",
-      "fmas": [
-        "FMA33581",
-        "FMA33584",
-        "FMA33586"
+      "name": "Trapezius",
+      "sources": [
+        "Trapezius muscle.r"
       ],
-      "sourceNames": [
-        "ascending part of right trapezius",
-        "transverse part of right trapezius",
-        "descending part of right trapezius"
+      "vertexCount": 3002,
+      "seat": "back"
+    },
+    {
+      "id": "latissimus",
+      "name": "Latissimus dorsi",
+      "sources": [
+        "Latissimus dorsi.r"
       ],
-      "laterality": "bilateral",
-      "vertexCount": 32182
+      "vertexCount": 2576,
+      "seat": "back"
+    },
+    {
+      "id": "levator-scapulae",
+      "name": "Levator scapulae",
+      "sources": [
+        "Levator scapulae.r"
+      ],
+      "vertexCount": 1652,
+      "seat": "back"
+    },
+    {
+      "id": "rhomboid-major",
+      "name": "Rhomboid major",
+      "sources": [
+        "Rhomboid major muscle.r"
+      ],
+      "vertexCount": 556,
+      "seat": "back"
+    },
+    {
+      "id": "rhomboid-minor",
+      "name": "Rhomboid minor",
+      "sources": [
+        "Rhomboid minor muscle.r"
+      ],
+      "vertexCount": 452,
+      "seat": "back"
+    },
+    {
+      "id": "teres-major",
+      "name": "Teres major",
+      "sources": [
+        "Teres major muscle.r"
+      ],
+      "vertexCount": 1070,
+      "seat": "back"
     },
     {
       "id": "rotator-cuff",
-      "fmas": [
-        "FMA32544",
-        "FMA32547",
-        "FMA13414",
-        "FMA32553"
+      "name": "Rotator cuff",
+      "sources": [
+        "Supraspinatus muscle.r",
+        "Infraspinatus muscle.r",
+        "Subscapularis muscle.r",
+        "Teres minor muscle.r"
       ],
-      "sourceNames": [
-        "right supraspinatus",
-        "right infraspinatus muscle",
-        "right subscapularis",
-        "right teres minor"
-      ],
-      "laterality": "bilateral",
-      "vertexCount": 9506
+      "vertexCount": 6920,
+      "seat": null
     },
     {
-      "id": "abdominal-wall",
-      "fmas": [
-        "FMA13336"
+      "id": "quadratus-lumborum",
+      "name": "Quadratus lumborum",
+      "sources": [
+        "Quadratus lumborum muscle.r"
       ],
-      "sourceNames": [
-        "right external oblique"
-      ],
-      "laterality": "bilateral",
-      "vertexCount": 127814
-    },
-    {
-      "id": "quadriceps",
-      "fmas": [
-        "FMA38928",
-        "FMA38930",
-        "FMA38932",
-        "FMA38934"
-      ],
-      "sourceNames": [
-        "right rectus femoris",
-        "right vastus lateralis",
-        "right vastus medialis",
-        "right vastus intermedius"
-      ],
-      "laterality": "bilateral",
-      "vertexCount": 25644
-    },
-    {
-      "id": "gluteus",
-      "fmas": [
-        "FMA22328",
-        "FMA22330",
-        "FMA22332"
-      ],
-      "sourceNames": [
-        "right gluteus maximus",
-        "right gluteus medius",
-        "right gluteus minimus"
-      ],
-      "laterality": "bilateral",
-      "vertexCount": 14862
-    },
-    {
-      "id": "hamstrings",
-      "fmas": [
-        "FMA22358",
-        "FMA22448",
-        "FMA45888",
-        "FMA45891"
-      ],
-      "sourceNames": [
-        "right semitendinosus",
-        "right semimembranosus",
-        "long head of right biceps femoris",
-        "short head of right biceps femoris"
-      ],
-      "laterality": "bilateral",
-      "vertexCount": 16896
-    },
-    {
-      "id": "hip-adductors",
-      "fmas": [
-        "FMA22452",
-        "FMA22456",
-        "FMA22459",
-        "FMA43883"
-      ],
-      "sourceNames": [
-        "right adductor brevis",
-        "right adductor longus",
-        "right adductor magnus",
-        "right gracilis"
-      ],
-      "laterality": "bilateral",
-      "vertexCount": 18546
-    },
-    {
-      "id": "iliopsoas",
-      "fmas": [
-        "FMA22322",
-        "FMA22342"
-      ],
-      "sourceNames": [
-        "right iliacus",
-        "right psoas major"
-      ],
-      "laterality": "bilateral",
-      "vertexCount": 12158
-    },
-    {
-      "id": "gastrocnemius",
-      "fmas": [
-        "FMA45957",
-        "FMA45960"
-      ],
-      "sourceNames": [
-        "medial head of right gastrocnemius",
-        "lateral head of right gastrocnemius"
-      ],
-      "laterality": "bilateral",
-      "vertexCount": 8022
-    },
-    {
-      "id": "soleus",
-      "fmas": [
-        "FMA22558"
-      ],
-      "sourceNames": [
-        "right soleus"
-      ],
-      "laterality": "bilateral",
-      "vertexCount": 5348
-    },
-    {
-      "id": "tibialis-anterior",
-      "fmas": [
-        "FMA22544"
-      ],
-      "sourceNames": [
-        "right tibialis anterior"
-      ],
-      "laterality": "bilateral",
-      "vertexCount": 4408
+      "vertexCount": 2482,
+      "seat": "back"
     },
     {
       "id": "erector-spinae",
-      "fmas": [
-        "FMA22740",
-        "FMA22742",
-        "FMA22744",
-        "FMA22751",
-        "FMA22754",
-        "FMA22757",
-        "FMA22779"
+      "name": "Erector spinae",
+      "sources": [
+        "Iliocostalis cervicis muscle.r",
+        "Iliocostalis lumborum muscle.r",
+        "Iliocostalis thoracis muscle.r",
+        "Longissimus capitis muscle.r",
+        "Longissimus cervicis muscle.r",
+        "Longissimus thoracis muscle.r",
+        "Spinalis cervicis muscle.r",
+        "Spinalis thoracis muscle.r"
       ],
-      "sourceNames": [
-        "right iliocostalis lumborum",
-        "right iliocostalis thoracis",
-        "right iliocostalis cervicis",
-        "right longissimus thoracis",
-        "right longissimus capitis",
-        "right longissimus cervicis",
-        "right spinalis thoracis"
+      "vertexCount": 40060,
+      "seat": "back"
+    },
+    {
+      "id": "multifidus",
+      "name": "Multifidus",
+      "sources": [
+        "Multifidus cervicis.r",
+        "Multifidus lumborum.r",
+        "Multifidus thoracis.r"
       ],
-      "laterality": "bilateral",
-      "vertexCount": 82750
+      "vertexCount": 11843,
+      "seat": "back"
+    },
+    {
+      "id": "semispinalis",
+      "name": "Semispinalis",
+      "sources": [
+        "Semispinalis cervicis muscle.r",
+        "Semispinalis thoracis muscle.r"
+      ],
+      "vertexCount": 8216,
+      "seat": "back"
+    },
+    {
+      "id": "splenius-capitis",
+      "name": "Splenius capitis",
+      "sources": [
+        "Splenius capitis muscle.r"
+      ],
+      "vertexCount": 524,
+      "seat": "back"
+    },
+    {
+      "id": "splenius-cervicis",
+      "name": "Splenius cervicis",
+      "sources": [
+        "Splenius cervicis muscle.r"
+      ],
+      "vertexCount": 2180,
+      "seat": "back"
+    },
+    {
+      "id": "serratus-posterior-superior",
+      "name": "Serratus posterior superior",
+      "sources": [
+        "Serratus posterior superior muscle.r"
+      ],
+      "vertexCount": 1366,
+      "seat": "back"
+    },
+    {
+      "id": "serratus-posterior-inferior",
+      "name": "Serratus posterior inferior",
+      "sources": [
+        "Serratus posterior inferior muscle.r"
+      ],
+      "vertexCount": 1674,
+      "seat": "back"
+    },
+    {
+      "id": "abdominal-wall",
+      "name": "Abdominal wall",
+      "sources": [
+        "Rectus abdominal muscle.r",
+        "Pyramidalis muscle.r"
+      ],
+      "vertexCount": 2552,
+      "seat": "abs"
+    },
+    {
+      "id": "external-oblique",
+      "name": "External oblique",
+      "sources": [
+        "External abdominal oblique muscle.r"
+      ],
+      "vertexCount": 5370,
+      "seat": null
+    },
+    {
+      "id": "internal-oblique",
+      "name": "Internal oblique",
+      "sources": [
+        "Internal abdominal oblique muscle.r"
+      ],
+      "vertexCount": 1914,
+      "seat": null
+    },
+    {
+      "id": "transversus-abdominis",
+      "name": "Transversus abdominis",
+      "sources": [
+        "Transverse abdominal muscle.r"
+      ],
+      "vertexCount": 1610,
+      "seat": null
+    },
+    {
+      "id": "iliopsoas",
+      "name": "Iliopsoas",
+      "sources": [
+        "Iliacus muscle.r",
+        "Psoas major.r",
+        "Psoas minor.r"
+      ],
+      "vertexCount": 8496,
+      "seat": null
+    },
+    {
+      "id": "biceps-left",
+      "name": "Biceps \u00b7 left",
+      "sources": [
+        "Long head of biceps brachii.r",
+        "Short head of biceps brachii.r"
+      ],
+      "vertexCount": 1099,
+      "seat": null
+    },
+    {
+      "id": "biceps-right",
+      "name": "Biceps \u00b7 right",
+      "sources": [
+        "Long head of biceps brachii.r",
+        "Short head of biceps brachii.r"
+      ],
+      "vertexCount": 1099,
+      "seat": null
+    },
+    {
+      "id": "triceps-left",
+      "name": "Triceps \u00b7 left",
+      "sources": [
+        "Long head of triceps brachii.r",
+        "Lateral head of triceps brachii.r",
+        "Medial head of triceps brachii.r"
+      ],
+      "vertexCount": 3244,
+      "seat": null
+    },
+    {
+      "id": "triceps-right",
+      "name": "Triceps \u00b7 right",
+      "sources": [
+        "Long head of triceps brachii.r",
+        "Lateral head of triceps brachii.r",
+        "Medial head of triceps brachii.r"
+      ],
+      "vertexCount": 3244,
+      "seat": null
+    },
+    {
+      "id": "brachialis",
+      "name": "Brachialis",
+      "sources": [
+        "Brachialis muscle.r"
+      ],
+      "vertexCount": 1828,
+      "seat": null
+    },
+    {
+      "id": "coracobrachialis",
+      "name": "Coracobrachialis",
+      "sources": [
+        "Coracobrachialis muscle.r"
+      ],
+      "vertexCount": 940,
+      "seat": null
+    },
+    {
+      "id": "anconeus",
+      "name": "Anconeus",
+      "sources": [
+        "Anconeus muscle.r"
+      ],
+      "vertexCount": 916,
+      "seat": null
+    },
+    {
+      "id": "brachioradialis",
+      "name": "Brachioradialis",
+      "sources": [
+        "Brachioradialis muscle.r"
+      ],
+      "vertexCount": 880,
+      "seat": null
     },
     {
       "id": "forearm-flexors",
-      "fmas": [
-        "FMA38460",
-        "FMA38470",
-        "FMA38479",
-        "FMA38482",
-        "FMA38617",
-        "FMA38619"
+      "name": "Forearm flexors",
+      "sources": [
+        "Flexor carpi radialis.r",
+        "Humeral head of flexor carpi ulnaris.r",
+        "Ulnar head of flexor carpi ulnaris.r",
+        "Flexor digitorum profundus.r",
+        "Flexor digitorum superficialis humero-ulnar head.r",
+        "Flexor digitorum superficialis radial head.r",
+        "Flexor pollicis longus.r",
+        "Palmaris longus muscle.r"
       ],
-      "sourceNames": [
-        "right flexor carpi radialis",
-        "right flexor digitorum superficialis",
-        "right flexor digitorum profundus",
-        "right flexor pollicis longus",
-        "humeral head of right flexor carpi ulnaris",
-        "ulnar head of right flexor carpi ulnaris"
-      ],
-      "laterality": "bilateral",
-      "vertexCount": 33604
+      "vertexCount": 21584,
+      "seat": null
     },
     {
       "id": "forearm-extensors",
-      "fmas": [
-        "FMA38495",
-        "FMA38498",
-        "FMA38501",
-        "FMA38504",
-        "FMA38507",
-        "FMA38519",
-        "FMA38522",
-        "FMA38525"
+      "name": "Forearm extensors",
+      "sources": [
+        "Extensor carpi radialis brevis.r",
+        "Extensor carpi radialis longus.r",
+        "Extensor digiti minimi.r",
+        "Extensor digitorum.r",
+        "Extensor indicis.r",
+        "Extensor pollicis brevis.r",
+        "Extensor pollicis longus.r",
+        "Humeral head of extensor carpi ulnaris.r",
+        "Ulnar head of extensor carpi ulnaris.r",
+        "Abductor pollicis longus.r"
       ],
-      "sourceNames": [
-        "right extensor carpi radialis longus",
-        "right extensor carpi radialis brevis",
-        "right extensor digitorum",
-        "right extensor digiti minimi",
-        "right extensor carpi ulnaris",
-        "right extensor pollicis brevis",
-        "right extensor pollicis longus",
-        "right extensor indicis"
+      "vertexCount": 18484,
+      "seat": null
+    },
+    {
+      "id": "pronator-teres",
+      "name": "Pronator teres",
+      "sources": [
+        "Humeral head of pronator teres.r",
+        "Ulnar head of pronator teres.r"
       ],
-      "laterality": "bilateral",
-      "vertexCount": 28860
+      "vertexCount": 1904,
+      "seat": null
+    },
+    {
+      "id": "pronator-quadratus",
+      "name": "Pronator quadratus",
+      "sources": [
+        "Pronator quadratus.r"
+      ],
+      "vertexCount": 1426,
+      "seat": null
+    },
+    {
+      "id": "supinator",
+      "name": "Supinator",
+      "sources": [
+        "Supinator.r"
+      ],
+      "vertexCount": 1384,
+      "seat": null
+    },
+    {
+      "id": "quadriceps",
+      "name": "Quadriceps",
+      "sources": [
+        "Rectus femoris.r",
+        "Vastus intermedius muscle.r",
+        "Vastus lateralis muscle.r",
+        "Vastus medialis muscle.r"
+      ],
+      "vertexCount": 6066,
+      "seat": null
+    },
+    {
+      "id": "hamstrings",
+      "name": "Hamstrings",
+      "sources": [
+        "Long head of biceps femoris.r",
+        "Short head of biceps femoris.r",
+        "Semimembranosus muscle.r",
+        "Semitendinosus muscle.r"
+      ],
+      "vertexCount": 6510,
+      "seat": null
+    },
+    {
+      "id": "hip-adductors",
+      "name": "Hip adductors",
+      "sources": [
+        "Adductor longus.r",
+        "Adductor brevis.r",
+        "Adductor magnus.r",
+        "Gracilis muscle.r",
+        "Pectineus muscle.r"
+      ],
+      "vertexCount": 8804,
+      "seat": null
+    },
+    {
+      "id": "gluteus",
+      "name": "Gluteus",
+      "sources": [
+        "Gluteus maximus muscle.r",
+        "Gluteus medius muscle.r",
+        "Gluteus minimus muscle.r"
+      ],
+      "vertexCount": 3468,
+      "seat": "back"
+    },
+    {
+      "id": "gastrocnemius",
+      "name": "Gastrocnemius",
+      "sources": [
+        "Lateral head of gastrocnemius.r",
+        "Medial head of gastrocnemius.r"
+      ],
+      "vertexCount": 4612,
+      "seat": null
+    },
+    {
+      "id": "soleus",
+      "name": "Soleus",
+      "sources": [
+        "Soleus muscle.r"
+      ],
+      "vertexCount": 1450,
+      "seat": null
+    },
+    {
+      "id": "tibialis-anterior",
+      "name": "Tibialis anterior",
+      "sources": [
+        "Tibialis anterior muscle.r"
+      ],
+      "vertexCount": 1614,
+      "seat": null
+    },
+    {
+      "id": "tibialis-posterior",
+      "name": "Tibialis posterior",
+      "sources": [
+        "Tibialis posterior muscle.r"
+      ],
+      "vertexCount": 3832,
+      "seat": null
+    },
+    {
+      "id": "fibularis-longus",
+      "name": "Fibularis longus",
+      "sources": [
+        "Fibularis longus muscle.r"
+      ],
+      "vertexCount": 1852,
+      "seat": null
+    },
+    {
+      "id": "fibularis-brevis",
+      "name": "Fibularis brevis",
+      "sources": [
+        "Fibularis brevis muscle.r",
+        "Fibularis tertius muscle.r"
+      ],
+      "vertexCount": 2296,
+      "seat": null
+    },
+    {
+      "id": "sartorius",
+      "name": "Sartorius",
+      "sources": [
+        "Sartorius muscle.r"
+      ],
+      "vertexCount": 1704,
+      "seat": null
+    },
+    {
+      "id": "tensor-fasciae-latae",
+      "name": "Tensor fasciae latae",
+      "sources": [
+        "Tensor fasciae latae.r"
+      ],
+      "vertexCount": 1198,
+      "seat": null
+    },
+    {
+      "id": "piriformis",
+      "name": "Piriformis",
+      "sources": [
+        "Piriformis muscle.r"
+      ],
+      "vertexCount": 1918,
+      "seat": "back"
+    },
+    {
+      "id": "obturator-internus",
+      "name": "Obturator internus",
+      "sources": [
+        "Obturator internus.r"
+      ],
+      "vertexCount": 1002,
+      "seat": null
+    },
+    {
+      "id": "obturator-externus",
+      "name": "Obturator externus",
+      "sources": [
+        "Obturator externus.r"
+      ],
+      "vertexCount": 962,
+      "seat": null
+    },
+    {
+      "id": "gemelli",
+      "name": "Gemelli",
+      "sources": [
+        "Superior gemellus muscle.r",
+        "Inferior gemellus muscle.r"
+      ],
+      "vertexCount": 1454,
+      "seat": null
+    },
+    {
+      "id": "quadratus-femoris",
+      "name": "Quadratus femoris",
+      "sources": [
+        "Quadratus femoris muscle.r"
+      ],
+      "vertexCount": 1236,
+      "seat": null
+    },
+    {
+      "id": "popliteus",
+      "name": "Popliteus",
+      "sources": [
+        "Popliteus muscle.r"
+      ],
+      "vertexCount": 1354,
+      "seat": null
+    },
+    {
+      "id": "plantaris",
+      "name": "Plantaris",
+      "sources": [
+        "Plantaris muscle.r"
+      ],
+      "vertexCount": 1286,
+      "seat": null
     }
   ]
 }

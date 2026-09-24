@@ -3,7 +3,6 @@ import { test } from 'node:test'
 import { toggleHotSystems } from './hotSystems'
 import {
   dropSelectionIfCold,
-  dropSelectionIfCoverageOff,
   hideForIsolate,
   isIsolating,
   isPartPickable,
@@ -20,10 +19,11 @@ test('default hot set is skeleton so the mesh kit is the first silhouette', () =
   assert.deepEqual(next, ['skeleton', 'muscle'])
 })
 
-test('max-two replace drops the oldest system, not a silent leftover', () => {
-  const next = toggleHotSystems(['skeleton', 'muscle'], 'nerve')
-  assert.deepEqual(next, ['muscle', 'nerve'])
-  assert.equal(next.includes('skeleton'), false)
+test('turning another system on keeps the ones already hot', () => {
+  const next = toggleHotSystems(['muscle', 'vessel'], 'skeleton')
+  assert.deepEqual(next, ['muscle', 'vessel', 'skeleton'])
+  const all = toggleHotSystems(toggleHotSystems(next, 'nerve'), 'other')
+  assert.deepEqual(all, ['muscle', 'vessel', 'skeleton', 'nerve', 'other'])
 })
 
 test('orphan isolate does not freeze hot bones', () => {
@@ -50,9 +50,9 @@ test('Muscle-off drops a muscle selection and keeps a bone selection', () => {
   assert.equal(dropSelectionIfCold(hot, null), null)
 })
 
-test('M2 coverage off drops cuff picks and keeps Iron majors', () => {
-  assert.equal(dropSelectionIfCoverageOff(false, 'rotator-cuff'), null)
-  assert.equal(dropSelectionIfCoverageOff(false, 'erector-spinae'), null)
-  assert.equal(dropSelectionIfCoverageOff(false, 'pectoralis'), 'pectoralis')
-  assert.equal(dropSelectionIfCoverageOff(true, 'rotator-cuff'), 'rotator-cuff')
+test('turning Muscle off drops a cuff pick the same way as any other muscle', () => {
+  const hot = ['skeleton'] as const
+  assert.equal(dropSelectionIfCold(hot, 'rotator-cuff'), null)
+  assert.equal(dropSelectionIfCold(hot, 'erector-spinae'), null)
+  assert.equal(dropSelectionIfCold(['skeleton', 'muscle'], 'rotator-cuff'), 'rotator-cuff')
 })

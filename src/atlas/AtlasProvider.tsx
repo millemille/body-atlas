@@ -9,8 +9,7 @@ import {
 } from 'react'
 import { toggleHotSystems } from './hotSystems'
 import { JUMP_BY_ID, type JumpRegionId } from './jumpTo'
-import { filterStructuresForM2Coverage } from './muscleReveal'
-import { dropSelectionIfCold, dropSelectionIfCoverageOff } from './pickable'
+import { dropSelectionIfCold } from './pickable'
 import { noteAtlasPick, restoreStagePicks } from './pointerSession'
 import {
   INITIAL_SKELETON_LOAD,
@@ -21,7 +20,6 @@ import type { Structure, SystemId, ViewMode } from './types'
 
 type AtlasContextValue = {
   hotSystems: SystemId[]
-  m2Coverage: boolean
   selectedId: string | null
   query: string
   viewMode: ViewMode
@@ -33,8 +31,6 @@ type AtlasContextValue = {
   selected: Structure | null
   visibleStructures: Structure[]
   toggleSystem: (id: SystemId) => void
-  toggleM2Coverage: () => void
-  enableM2Coverage: () => void
   select: (id: string | null) => void
   jumpTo: (id: JumpRegionId) => void
   setQuery: (q: string) => void
@@ -55,7 +51,6 @@ const AtlasContext = createContext<AtlasContextValue | null>(null)
 
 export function AtlasProvider({ children }: { children: ReactNode }) {
   const [hotSystems, setHotSystems] = useState<SystemId[]>(['skeleton'])
-  const [m2Coverage, setM2Coverage] = useState(true)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [viewMode, setViewMode] = useState<ViewMode>('default')
@@ -70,7 +65,7 @@ export function AtlasProvider({ children }: { children: ReactNode }) {
   const selected = getStructure(selectedId)
 
   const visibleStructures = useMemo(() => {
-    const list = filterStructuresForM2Coverage(structuresForSystems(hotSystems), m2Coverage)
+    const list = structuresForSystems(hotSystems)
     const q = query.trim().toLowerCase()
     if (!q) return list
     return list.filter(
@@ -81,19 +76,13 @@ export function AtlasProvider({ children }: { children: ReactNode }) {
         s.function.toLowerCase().includes(q) ||
         s.id.includes(q),
     )
-  }, [hotSystems, m2Coverage, query])
+  }, [hotSystems, query])
 
   const toggleSystem = useCallback((id: SystemId) => {
     setHotSystems((cur) => {
       const next = toggleHotSystems(cur, id)
-      if (id === 'muscle' && !next.includes('muscle')) {
-        setM2Coverage(false)
-      }
       setSelectedId((sel) => {
-        const kept = dropSelectionIfCoverageOff(
-          next.includes('muscle') && m2Coverage,
-          dropSelectionIfCold(next, sel),
-        )
+        const kept = dropSelectionIfCold(next, sel)
         if (sel && !kept) {
           // Orphan Isolate / leftover Focus: selection died with the system.
           // Do not bump viewEpoch — that snaps the camera home and used to
@@ -107,29 +96,6 @@ export function AtlasProvider({ children }: { children: ReactNode }) {
       return next
     })
     restoreStagePicks()
-  }, [m2Coverage])
-
-  const toggleM2Coverage = useCallback(() => {
-    setM2Coverage((cur) => {
-      const next = !cur
-      if (!next) {
-        setSelectedId((sel) => {
-          const kept = dropSelectionIfCoverageOff(false, sel)
-          if (sel && !kept) {
-            setIsolated(false)
-            setViewMode('default')
-            setJumpRegionId(null)
-          }
-          return kept
-        })
-      }
-      return next
-    })
-    restoreStagePicks()
-  }, [])
-
-  const enableM2Coverage = useCallback(() => {
-    setM2Coverage(true)
   }, [])
 
   const select = useCallback((id: string | null) => {
@@ -169,16 +135,15 @@ export function AtlasProvider({ children }: { children: ReactNode }) {
   const requestFocus = enterFocus
 
   const exitFocus = useCallback(() => {
+    // Leave the camera where Focus put it. viewEpoch is the home snap (reset).
     setJumpRegionId(null)
     setViewMode('default')
-    setViewEpoch((n) => n + 1)
   }, [])
 
   const toggleFocus = useCallback(() => {
     setViewMode((m) => {
       if (m === 'focus') {
         setJumpRegionId(null)
-        setViewEpoch((n) => n + 1)
         return 'default'
       }
       setJumpRegionId(null)
@@ -232,7 +197,6 @@ export function AtlasProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AtlasContextValue>(
     () => ({
       hotSystems,
-      m2Coverage,
       selectedId,
       query,
       viewMode,
@@ -244,8 +208,6 @@ export function AtlasProvider({ children }: { children: ReactNode }) {
       selected,
       visibleStructures,
       toggleSystem,
-      toggleM2Coverage,
-      enableM2Coverage,
       select,
       jumpTo,
       setQuery,
@@ -263,7 +225,6 @@ export function AtlasProvider({ children }: { children: ReactNode }) {
     }),
     [
       hotSystems,
-      m2Coverage,
       selectedId,
       query,
       viewMode,
@@ -275,8 +236,6 @@ export function AtlasProvider({ children }: { children: ReactNode }) {
       selected,
       visibleStructures,
       toggleSystem,
-      toggleM2Coverage,
-      enableM2Coverage,
       select,
       jumpTo,
       enterFocus,

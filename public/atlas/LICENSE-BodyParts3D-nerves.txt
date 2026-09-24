@@ -1,0 +1,18 @@
+BodyParts3D nerve meshes (spinal cord and the cranial nerves this release ships)
+
+Source models: BodyParts3D — The Database Center for Life Science (DBCLS)
+Release: 4.0, polygon reduction 99%, untextured OBJ
+Cranial nerves from the IS-A tree; spinal cord from the PART-OF tree (FJ1737).
+https://dbarchive.biosciencedbc.jp/en/bodyparts3d/download.html
+
+License: Creative Commons Attribution-ShareAlike 2.1 Japan (CC BY-SA 2.1 JP)
+https://creativecommons.org/licenses/by-sa/2.1/jp/
+https://dbarchive.biosciencedbc.jp/en/bodyparts3d/lic.html
+
+Required attribution:
+"BodyParts3D — The Database Center for Life Science — CC BY-SA"
+
+This GLB uses the same meter, Y-up, +X anatomical-right seating as skeleton.glb.
+No texture maps are included. Limb nerves in the same file are Open3Dmodel,
+CC BY-SA 4.0, also untextured. See LICENSE-Open3D-nerves.txt.
+Share-alike: this derived GLB stays CC BY-SA.

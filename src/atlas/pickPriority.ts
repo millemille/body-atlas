@@ -35,11 +35,11 @@ type AtlasObject = Object3D & {
     atlasId?: string
     rim?: boolean
     skipPick?: boolean
-    source?: 'bodyparts3d' | 'interim'
+    source?: 'bodyparts3d' | 'open3d' | 'interim'
   }
 }
 
-function hitSource(hit: Intersection): 'bodyparts3d' | 'interim' | undefined {
+function hitSource(hit: Intersection): 'bodyparts3d' | 'open3d' | 'interim' | undefined {
   const u = atlasOf(hit)
   if (u.source) return u.source
   return u.atlasId ? getStructure(u.atlasId)?.source : undefined
@@ -51,7 +51,7 @@ function isInterimHit(hit: Intersection) {
 
 function isInterimId(
   id: string | undefined,
-  source?: 'bodyparts3d' | 'interim',
+  source?: 'bodyparts3d' | 'open3d' | 'interim',
 ) {
   if (source) return source === 'interim'
   return Boolean(id && getStructure(id)?.source === 'interim')
@@ -148,7 +148,7 @@ export function skipMuscleOnBackRay(
   cameraPos?: CameraPos,
   rayDir?: RayDir | null,
   hitPoint?: { z: number } | null,
-  source?: 'bodyparts3d' | 'interim',
+  source?: 'bodyparts3d' | 'open3d' | 'interim',
 ) {
   if (!isInterimId(id, source)) return false
   if (skipVentralMuscleHit(id, cameraPos, rayDir, hitPoint, source)) return true
@@ -161,7 +161,7 @@ export function skipVentralMuscleHit(
   cameraPos?: CameraPos,
   rayDir?: RayDir | null,
   hitPoint?: { z: number } | null,
-  source?: 'bodyparts3d' | 'interim',
+  source?: 'bodyparts3d' | 'open3d' | 'interim',
 ) {
   if (!id || !isInterimId(id, source)) return false
   const part = getStructure(id)

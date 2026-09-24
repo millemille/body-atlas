@@ -24,8 +24,8 @@ export type Structure = {
   innervation?: string
   position: [number, number, number]
   focusDistance: number
-  /** BodyParts3D mesh vs interim capsule/ellipsoid glyph. */
-  source?: 'bodyparts3d' | 'interim'
+  /** BodyParts3D bone, vessel, or nerve, Open3D muscle, or an interim glyph. */
+  source?: 'bodyparts3d' | 'open3d' | 'interim'
   fma?: string
 }
 
