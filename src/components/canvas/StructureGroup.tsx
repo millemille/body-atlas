@@ -229,7 +229,7 @@ export function StructureGroup({
   }, [isolatedAway, pickable, rest, selected, structure.system, systemHot, targetOpacity, viewMode])
 
   return (
-    <StructureRenderProvider value={{ id, selected, hovered: false, pickable }}>
+    <StructureRenderProvider value={{ id, selected, pickable }}>
       <group position={pivot}>
         <group
           ref={root}

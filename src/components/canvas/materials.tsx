@@ -10,20 +10,17 @@ import {
 } from '@/atlas/studioLook'
 import type { SystemId } from '@/atlas/types'
 
-type MatKind = SystemId | 'mannequin' | 'vessel-core'
-
 export function SystemMaterial({
   kind,
   slate = false,
 }: {
-  kind: MatKind
+  kind: SystemId
   slate?: boolean
 }) {
-  const baseOpacity = kind === 'vessel-core' ? 0.55 : BASE_OPACITY[kind]
+  const baseOpacity = BASE_OPACITY[kind]
   const stash = (m: { userData: Record<string, number> }) => {
     m.userData.baseOpacity = baseOpacity
-    m.userData.baseEmissive =
-      kind === 'vessel-core' ? 0.22 : 0.012
+    m.userData.baseEmissive = 0.012
   }
 
   if (kind === 'skeleton') {
@@ -91,19 +88,6 @@ export function SystemMaterial({
     )
   }
 
-  if (kind === 'vessel-core') {
-    return (
-      <meshBasicMaterial
-        color={SABRINA.vesselRuby}
-        transparent
-        opacity={baseOpacity}
-        depthWrite={false}
-        toneMapped={false}
-        onUpdate={stash}
-      />
-    )
-  }
-
   if (kind === 'vessel') {
     const tint = slate ? SABRINA.vesselVein : SABRINA.vesselRuby
     const glow = slate ? 0.42 : 0.38
@@ -147,23 +131,4 @@ export function SystemMaterial({
       />
     )
   }
-
-  return (
-    <meshPhysicalMaterial
-      color={SABRINA.skin}
-      roughness={0.55}
-      metalness={0}
-      transmission={0.78}
-      thickness={0.28}
-      ior={1.38}
-      specularIntensity={0.08}
-      emissive="#9aa0a8"
-      emissiveIntensity={0.018}
-      envMapIntensity={0.2}
-      transparent
-      opacity={baseOpacity}
-      depthWrite={false}
-      onUpdate={stash}
-    />
-  )
 }

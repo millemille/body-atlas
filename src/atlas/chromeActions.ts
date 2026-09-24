@@ -57,10 +57,6 @@ export function activateFocus(source: 'toolbar' | 'card') {
   actions?.focus()
 }
 
-export function runFocus(source: 'toolbar' | 'card') {
-  activateFocus(source)
-}
-
 export function runReset() {
   once('reset', () => {
     if (isAtlasDebug()) showAtlasToast('TOOLBAR RESET FIRED')

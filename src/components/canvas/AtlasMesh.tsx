@@ -8,7 +8,7 @@ import { isDragging, wasDrag } from '@/atlas/pointerSession'
 import { useStructureRender } from './structureState'
 
 type MeshProps = ComponentProps<'mesh'> & {
-  /** Local-centered geometry may scale. World-space tubes must not. */
+  /** Local-centered geometry may scale. Authored world-space geometry must not. */
   centered?: boolean
 }
 

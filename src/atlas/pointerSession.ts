@@ -4,7 +4,6 @@ let downX = 0
 let downY = 0
 let liveDrag = false
 let canvasPickSuppress = false
-const listeners = new Set<(next: boolean) => void>()
 
 type OrbitLike = {
   enabled: boolean
@@ -28,7 +27,6 @@ export function setOrbitHeld(held: boolean) {
 function emitLive(next: boolean) {
   if (liveDrag === next) return
   liveDrag = next
-  listeners.forEach((fn) => fn(next))
 }
 
 export function releaseAllCaptures(pointerId?: number) {
@@ -128,14 +126,6 @@ export function wasDrag() {
 
 export function isDragging() {
   return liveDrag
-}
-
-export function subscribeDrag(fn: (next: boolean) => void) {
-  listeners.add(fn)
-  fn(liveDrag)
-  return () => {
-    listeners.delete(fn)
-  }
 }
 
 let chromeUntil = 0

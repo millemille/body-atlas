@@ -3,7 +3,6 @@ import { createContext, useContext } from 'react'
 export type StructureRenderState = {
   id: string
   selected: boolean
-  hovered: boolean
   pickable: boolean
 }
 

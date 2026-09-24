@@ -1,24 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Group, Mesh, type BufferGeometry } from 'three'
+import { Group } from 'three'
 import { useAtlas } from '@/atlas/AtlasProvider'
 import { NERVE_MESH_PARTS } from '@/atlas/generated/nerveCatalog'
 import { fetchNerveGltf, peekCachedNerves } from '@/atlas/nerveLoad'
 import { AtlasMesh } from '../AtlasMesh'
+import { geometriesById } from '../geometriesById'
 import { SystemMaterial } from '../materials'
 import { StructureGroup } from '../StructureGroup'
 
-function geometriesById(root: Group): Map<string, BufferGeometry> {
-  const map = new Map<string, BufferGeometry>()
-  root.traverse((obj) => {
-    if (obj instanceof Mesh && obj.name && obj.geometry) {
-      map.set(obj.name, obj.geometry)
-    }
-  })
-  return map
-}
-
 /**
- * Live Nerve path: BodyParts3D cranial nerves and spinal cord from nerves.glb.
+ * Live Nerve path: BodyParts3D cranial nerves plus Open3D limb nerves from nerves.glb.
  * The layer stays unmounted until Nerve is hot, so Muscle remains first-hit.
  */
 export function NerveLayer() {
