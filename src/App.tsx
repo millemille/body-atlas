@@ -14,7 +14,6 @@ import { KeyboardShortcuts } from '@/components/chrome/KeyboardShortcuts'
 import { SelectionCard } from '@/components/chrome/SelectionCard'
 import { MobileStructures, StructuresRail } from '@/components/chrome/StructuresRail'
 import { SystemsBar } from '@/components/chrome/SystemsBar'
-import { TooltipProvider } from '@/components/ui/tooltip'
 
 function ChromeActionBinder() {
   const { requestFocus, resetView, toggleIsolate } = useAtlas()
@@ -86,10 +85,8 @@ function Shell() {
 
 export default function App() {
   return (
-    <TooltipProvider>
-      <AtlasProvider>
-        <Shell />
-      </AtlasProvider>
-    </TooltipProvider>
+    <AtlasProvider>
+      <Shell />
+    </AtlasProvider>
   )
 }

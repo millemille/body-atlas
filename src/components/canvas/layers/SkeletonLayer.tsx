@@ -4,7 +4,7 @@ import { useAtlas } from '@/atlas/AtlasProvider'
 import { SKELETON_MESH_PARTS } from '@/atlas/generated/skeletonCatalog'
 import { SKELETON_BYTES, fetchSkeletonGltf, peekCachedSkeleton } from '@/atlas/skeletonLoad'
 import { AtlasMesh } from '../AtlasMesh'
-import { geometriesById } from '../geometriesById'
+import { geometriesForParts } from '../geometriesById'
 import { SystemMaterial } from '../materials'
 import { StructureGroup } from '../StructureGroup'
 
@@ -65,14 +65,10 @@ export function SkeletonLayer() {
     }
   }, [markSceneReady, reportSkeletonLoad])
 
-  const mounted = useMemo(() => {
-    if (!scene) return []
-    const byName = geometriesById(scene)
-    return SKELETON_MESH_PARTS.flatMap((part) => {
-      const geometry = byName.get(part.id)
-      return geometry ? [{ part, geometry }] : []
-    })
-  }, [scene])
+  const mounted = useMemo(
+    () => geometriesForParts(scene, SKELETON_MESH_PARTS),
+    [scene],
+  )
 
   if (!scene) return null
 
