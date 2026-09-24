@@ -32,8 +32,13 @@ export function GestureHint() {
   if (!show) return null
 
   return (
-    <p className="max-w-xl text-center text-[10px] tracking-wide text-muted-ink/80">
-      Drag to orbit · click a structure · scroll to zoom
-    </p>
+    <>
+      <p className="hidden max-w-xl text-center text-[10px] tracking-wide text-muted-ink/80 md:block">
+        Drag to orbit · click a structure · scroll to zoom
+      </p>
+      <p className="max-w-xl text-center text-[10px] tracking-wide text-muted-ink/80 md:hidden">
+        Drag to orbit · tap a structure · pinch to zoom
+      </p>
+    </>
   )
 }

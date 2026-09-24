@@ -158,3 +158,11 @@
   font-family: var(--font-display);
   font-weight: 600;
 }
+
+.atlas-pill-row {
+  scrollbar-width: none;
+}
+
+.atlas-pill-row::-webkit-scrollbar {
+  display: none;
+}
