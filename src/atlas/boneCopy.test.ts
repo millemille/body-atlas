@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { BOILERPLATE_RE, applyBoneCopy, boneCopy } from './boneCopy'
-import { SKELETON_MESH_PARTS } from './generated/skeletonCatalog'
+import { SKELETON_MESH_COUNT, SKELETON_MESH_PARTS } from './generated/skeletonCatalog'
 import { NERVE_MESH_COUNT } from './generated/nerveCatalog'
 import { VESSEL_MESH_COUNT } from './generated/vesselCatalog'
 import { STRUCTURE_BY_ID, STRUCTURES } from './structures'
 
 test('every densify bone has real copy, not kit boilerplate', () => {
-  assert.equal(SKELETON_MESH_PARTS.length, 197)
+  assert.equal(SKELETON_MESH_PARTS.length, SKELETON_MESH_COUNT)
   for (const part of SKELETON_MESH_PARTS) {
     const live = STRUCTURE_BY_ID[part.id]
     assert.ok(live, part.id)

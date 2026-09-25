@@ -4,13 +4,12 @@ import { useAtlas } from '@/atlas/AtlasProvider'
 import { MUSCLE_MESH_PARTS } from '@/atlas/generated/muscleCatalog'
 import { fetchMuscleGltf, peekCachedMuscles } from '@/atlas/muscleLoad'
 import { AtlasMesh } from '../AtlasMesh'
-import { geometriesById } from '../geometriesById'
+import { geometriesForParts } from '../geometriesById'
 import { SystemMaterial } from '../materials'
 import { StructureGroup } from '../StructureGroup'
 
 /**
  * Live Muscle path: Open3D leaves from muscles.glb, first-hit. Latissimus included.
- * Procedural gels stay parked — they are not mounted.
  */
 export function MuscleLayer() {
   const { hotSystems } = useAtlas()
@@ -44,14 +43,10 @@ export function MuscleLayer() {
     }
   }, [])
 
-  const mounted = useMemo(() => {
-    if (!scene) return []
-    const byName = geometriesById(scene)
-    return MUSCLE_MESH_PARTS.flatMap((part) => {
-      const geometry = byName.get(part.id)
-      return geometry ? [{ part, geometry }] : []
-    })
-  }, [scene])
+  const mounted = useMemo(
+    () => geometriesForParts(scene, MUSCLE_MESH_PARTS),
+    [scene],
+  )
 
   if (!scene) return null
 

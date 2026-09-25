@@ -4,7 +4,7 @@ import { useAtlas } from '@/atlas/AtlasProvider'
 import { NERVE_MESH_PARTS } from '@/atlas/generated/nerveCatalog'
 import { fetchNerveGltf, peekCachedNerves } from '@/atlas/nerveLoad'
 import { AtlasMesh } from '../AtlasMesh'
-import { geometriesById } from '../geometriesById'
+import { geometriesForParts } from '../geometriesById'
 import { SystemMaterial } from '../materials'
 import { StructureGroup } from '../StructureGroup'
 
@@ -36,14 +36,10 @@ export function NerveLayer() {
     }
   }, [])
 
-  const mounted = useMemo(() => {
-    if (!scene) return []
-    const byName = geometriesById(scene)
-    return NERVE_MESH_PARTS.flatMap((part) => {
-      const geometry = byName.get(part.id)
-      return geometry ? [{ part, geometry }] : []
-    })
-  }, [scene])
+  const mounted = useMemo(
+    () => geometriesForParts(scene, NERVE_MESH_PARTS),
+    [scene],
+  )
 
   if (!scene || !nerveHot) return null
 

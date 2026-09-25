@@ -12,14 +12,12 @@
     try {
       if (window.__ATLAS_DEBUG__ === true) return true
       return new URLSearchParams(location.search).get('debug') === '1'
-    } catch (err) {
+    } catch {
       return false
     }
   }
 
   var BAND = 120
-  var lastMoveX = 0
-  var lastMoveY = 0
   var lastMoveDock = false
 
   var LABELS = {
@@ -232,7 +230,7 @@
       for (var k = 0; k < ids.length; k++) {
         try {
           if (node.hasPointerCapture(ids[k])) node.releasePointerCapture(ids[k])
-        } catch (err) {
+        } catch {
           /* ignore */
         }
       }
@@ -272,8 +270,6 @@
     var y = e.clientY
 
     if (e.type === 'pointermove' || e.type === 'mousemove') {
-      lastMoveX = x
-      lastMoveY = y
       lastMoveDock = inDockGeom(x, y)
       paintDockOutline(lastMoveDock)
       if (lastMoveDock || inCardPanel(x, y) || inCardFocus(x, y)) {

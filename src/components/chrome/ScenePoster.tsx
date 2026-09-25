@@ -1,4 +1,5 @@
 import { useAtlas } from '@/atlas/AtlasProvider'
+import { SKELETON_MESH_COUNT } from '@/atlas/generated/skeletonCatalog'
 
 /** Honest load status. Never covers the canvas. Never a stick-figure stand-in. */
 export function ScenePoster() {
@@ -12,7 +13,7 @@ export function ScenePoster() {
     phase === 'error'
       ? error ?? 'Skeleton failed to load'
       : phase === 'parse'
-        ? 'Preparing 197 bone meshes'
+        ? `Preparing ${SKELETON_MESH_COUNT} bone meshes`
         : `Loading BodyParts3D skeleton ${pct}%`
 
   return (

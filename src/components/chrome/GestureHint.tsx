@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 const KEY = 'body-atlas-gesture-hint'
+const HINT = 'max-w-xl text-center text-[10px] tracking-wide text-muted-ink/80'
 
 export function GestureHint() {
   const [show, setShow] = useState(() => {
@@ -32,8 +33,13 @@ export function GestureHint() {
   if (!show) return null
 
   return (
-    <p className="max-w-xl text-center text-[10px] tracking-wide text-muted-ink/80">
-      Drag to orbit · click a structure · scroll to zoom
-    </p>
+    <>
+      <p className={`hidden ${HINT} md:block`}>
+        Drag to orbit · click a structure · scroll to zoom
+      </p>
+      <p className={`${HINT} md:hidden`}>
+        Drag to orbit · tap a structure · pinch to zoom
+      </p>
+    </>
   )
 }

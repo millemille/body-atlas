@@ -5,5 +5,4 @@ export const SYSTEMS: SystemMeta[] = [
   { id: 'muscle', label: 'Muscle', hint: 'Rose volume · sheer' },
   { id: 'nerve', label: 'Nerve', hint: 'Yellow nerves' },
   { id: 'vessel', label: 'Vessel', hint: 'Red arteries, blue veins' },
-  { id: 'other', label: 'Other', hint: 'Rose organ masses' },
 ]

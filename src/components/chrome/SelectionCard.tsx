@@ -9,7 +9,7 @@ function cardFocus() {
 }
 
 const FOOTNOTE =
-  'Illustrative mockup only — not a scan, not a clinical map. Skeleton and muscle meshes: BodyParts3D (DBCLS) / Z-Anatomy, CC BY-SA (attribute + share-alike). Vessel meshes: BodyParts3D (DBCLS), CC BY-SA, untextured. Nerve meshes: BodyParts3D cranial nerves and Open3Dmodel limb nerves, CC BY-SA, untextured. Other stays glyphs.'
+  'Illustrative mockup only — not a scan, not a clinical map. Skeleton and muscle meshes: BodyParts3D (DBCLS) / Z-Anatomy, CC BY-SA (attribute + share-alike). Vessel meshes: BodyParts3D (DBCLS), CC BY-SA, untextured. Nerve meshes: BodyParts3D cranial nerves and Open3Dmodel limb nerves, CC BY-SA, untextured.'
 
 function fieldRows(part: Structure): { label: string; value: string }[] {
   const system = SYSTEMS.find((s) => s.id === part.system)?.label ?? part.system
@@ -63,7 +63,7 @@ export function SelectionCard({
       <div
         className={cn(
           'min-h-0 flex-1 overflow-y-auto pr-1',
-          mobile && 'max-h-[42vh]',
+          mobile && 'max-h-[30vh]',
         )}
       >
         <h2 className="font-display text-[1.55rem] leading-none tracking-tight text-ink">

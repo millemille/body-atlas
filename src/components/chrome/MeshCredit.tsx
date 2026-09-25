@@ -5,10 +5,16 @@ export function MeshCredit() {
       data-atlas-chrome
       className="max-w-xl px-4 text-center text-[10px] leading-snug text-muted-ink/70"
     >
-      Skeleton and muscle meshes: BodyParts3D (DBCLS) via Z-Anatomy —{' '}
-      <span className="text-muted-ink/85">CC BY-SA</span>
-      {' · '}
-      attribute + share-alike. Ivory styling is ours. Not a clinical map.
+      <span className="md:hidden">
+        BodyParts3D / Z-Anatomy meshes · <span className="text-muted-ink/85">CC BY-SA</span> · not a
+        clinical map.
+      </span>
+      <span className="hidden md:inline">
+        Skeleton and muscle meshes: BodyParts3D (DBCLS) via Z-Anatomy —{' '}
+        <span className="text-muted-ink/85">CC BY-SA</span>
+        {' · '}
+        attribute + share-alike. Ivory styling is ours. Not a clinical map.
+      </span>
     </p>
   )
 }

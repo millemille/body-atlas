@@ -48,7 +48,7 @@ export function MobileStructures() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="glass-panel pointer-events-auto rounded-full px-3 py-1.5 text-[11px] tracking-[0.16em] text-[#3AD1C7] uppercase md:hidden"
+        className="glass-panel pointer-events-auto min-h-11 shrink-0 rounded-full px-3.5 py-1.5 text-[11px] tracking-[0.16em] text-[#3AD1C7] uppercase md:hidden"
       >
         Structures
       </button>
@@ -126,12 +126,12 @@ function RailBody({ onCollapse }: { onCollapse?: () => void }) {
         ) : null}
       </header>
       <div className="relative px-3 pb-3">
-        <Search className="pointer-events-none absolute top-2.5 left-5 size-3.5 text-muted-ink" />
+        <Search className="pointer-events-none absolute top-2.5 left-5 size-3.5 text-muted-ink max-md:top-3.5" />
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search parts"
-          className="h-8 border-white/10 bg-black/30 pl-8 text-[13px] text-ink placeholder:text-muted-ink"
+          className="h-8 border-white/10 bg-black/30 pl-8 text-[13px] text-ink placeholder:text-muted-ink max-md:h-11"
         />
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-3">
@@ -250,7 +250,7 @@ function StructureRow({
         data-atlas-structure={item.id}
         onClick={onSelect}
         className={cn(
-          'w-full rounded-lg px-2.5 py-2 text-left transition-colors duration-200',
+          'w-full rounded-lg px-2.5 py-2 text-left transition-colors duration-200 max-md:min-h-11',
           active
             ? 'bg-[#3AD1C7]/12 text-ink shadow-[inset_0_0_0_1px_rgb(58_209_199_/_0.5)]'
             : 'text-ink/85 hover:bg-white/5',

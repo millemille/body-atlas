@@ -23,7 +23,7 @@ export function BottomToolbar() {
   return (
     <div
       data-atlas-toolbar
-      className="glass-panel flex items-stretch gap-0 rounded-full p-1"
+      className="glass-panel flex w-full max-w-md items-stretch gap-0 rounded-full p-1 md:w-auto md:max-w-none"
       style={{ pointerEvents: 'auto', position: 'relative', zIndex: 50 }}
     >
       <ToolButton name="reset" active={false} onActivate={toolbarReset}>
@@ -56,7 +56,7 @@ function ToolButton({
       data-atlas-tool={name}
       aria-pressed={active}
       tabIndex={0}
-      style={{ pointerEvents: 'auto', minWidth: 108, minHeight: 48 }}
+      style={{ pointerEvents: 'auto' }}
       onClick={onActivate}
       onKeyDown={(e) => {
         if (e.key !== 'Enter' && e.key !== ' ') return
@@ -64,7 +64,7 @@ function ToolButton({
         onActivate()
       }}
       className={cn(
-        'rounded-full px-5 text-[14px] tracking-wide outline-none',
+        'min-h-12 min-w-0 flex-1 rounded-full px-3 text-[14px] tracking-wide outline-none md:min-w-[108px] md:flex-none md:px-5',
         'focus-visible:ring-2 focus-visible:ring-[#3AD1C7]',
         active
           ? 'bg-[#3AD1C7]/18 text-[#3AD1C7] shadow-[inset_0_0_0_1px_#3AD1C7]'
