@@ -1,14 +1,8 @@
-/** Shared landmarks for the stylized mannequin (meters, Y-up, facing +Z). */
+/** Landmarks still used by organ glyphs and placement checks (meters, Y-up, facing +Z). */
 export const L = {
-  head: [0, 1.6, 0.02] as [number, number, number],
-  jaw: [0, 1.5, 0.03] as [number, number, number],
-  neck: [0, 1.47, 0.01] as [number, number, number],
   c7: [0, 1.42, -0.02] as [number, number, number],
   chest: [0, 1.24, 0.02] as [number, number, number],
   sternum: [0, 1.22, 0.08] as [number, number, number],
-  abdomen: [0, 1.04, 0.02] as [number, number, number],
-  waist: [0, 0.98, 0] as [number, number, number],
-  pelvis: [0, 0.88, 0] as [number, number, number],
   sacrum: [0, 0.9, -0.04] as [number, number, number],
   shoulderL: [-0.22, 1.38, 0] as [number, number, number],
   shoulderR: [0.22, 1.38, 0] as [number, number, number],
@@ -17,7 +11,6 @@ export const L = {
   elbowL: [-0.27, 1.08, 0.03] as [number, number, number],
   elbowR: [0.27, 1.08, 0.03] as [number, number, number],
   wristL: [-0.3, 0.8, 0.05] as [number, number, number],
-  wristR: [0.3, 0.8, 0.05] as [number, number, number],
   hipL: [-0.1, 0.84, 0.01] as [number, number, number],
   hipR: [0.1, 0.84, 0.01] as [number, number, number],
   kneeL: [-0.11, 0.48, 0.03] as [number, number, number],

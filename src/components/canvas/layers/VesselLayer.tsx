@@ -4,7 +4,7 @@ import { useAtlas } from '@/atlas/AtlasProvider'
 import { VESSEL_MESH_PARTS, VESSEL_VEIN_IDS } from '@/atlas/generated/vesselCatalog'
 import { fetchVesselGltf, peekCachedVessels } from '@/atlas/vesselLoad'
 import { AtlasMesh } from '../AtlasMesh'
-import { geometriesById } from '../geometriesById'
+import { geometriesForParts } from '../geometriesById'
 import { SystemMaterial } from '../materials'
 import { StructureGroup } from '../StructureGroup'
 
@@ -38,14 +38,10 @@ export function VesselLayer() {
     }
   }, [])
 
-  const mounted = useMemo(() => {
-    if (!scene) return []
-    const byName = geometriesById(scene)
-    return VESSEL_MESH_PARTS.flatMap((part) => {
-      const geometry = byName.get(part.id)
-      return geometry ? [{ part, geometry }] : []
-    })
-  }, [scene])
+  const mounted = useMemo(
+    () => geometriesForParts(scene, VESSEL_MESH_PARTS),
+    [scene],
+  )
 
   if (!scene || !vesselHot) return null
 
